@@ -1,0 +1,24 @@
+version: '3'
+
+vars:
+  PROTO_DIR: api
+  GO_OUT_DIR: pkg/api
+
+tasks:
+  proto:clean:
+    desc: Очищает сгенерированные файлы
+    cmds:
+      - powershell -Command "if (Test-Path -Path '{{.GO_OUT_DIR}}') { Remove-Item -Recurse -Force -Path '{{.GO_OUT_DIR}}'; Write-Host 'Директория {{.GO_OUT_DIR}} очищена' } else { Write-Host 'Директория {{.GO_OUT_DIR}} не существует' }"
+
+  deps:install:
+    desc: Устанавливает зависимости для генерации кода из proto файлов
+    cmds:
+      - go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+      - go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+      - echo "Зависимости успешно установлены"
+
+  proto:generate:
+    desc: Генерирует код из proto файлов
+    cmds:
+      - powershell -ExecutionPolicy Bypass -File scripts/generate_proto.ps1
+      - go mod tidy

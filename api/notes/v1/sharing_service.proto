@@ -1,0 +1,391 @@
+syntax = "proto3";
+
+package notes.v1;
+
+import "api/google/api/annotations.proto";
+import "api/google/protobuf/timestamp.proto";
+import "api/google/protobuf/empty.proto";
+import "api/common/v1/errors.proto";
+
+option go_package = "gitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/notes/v1;notesv1";
+
+// SharingService предоставляет методы для управления совместным доступом к заметкам
+service SharingService {
+  // ShareNote предоставляет доступ к заметке другому пользователю
+  rpc ShareNote(ShareNoteRequest) returns (ShareNoteResponse) {
+    option (google.api.http) = {
+      post: "/v1/notes/{note_id}/share"
+      body: "*"
+    };
+  }
+
+  // UpdateNoteAccess изменяет уровень доступа к заметке
+  rpc UpdateNoteAccess(UpdateNoteAccessRequest) returns (NoteAccessResponse) {
+    option (google.api.http) = {
+      patch: "/v1/notes/{note_id}/accesses/{access_id}"
+      body: "*"
+    };
+  }
+
+  // RevokeNoteAccess отзывает доступ к заметке у пользователя
+  rpc RevokeNoteAccess(RevokeNoteAccessRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1/notes/{note_id}/accesses/{access_id}"
+    };
+  }
+
+  // ListNoteAccesses получает список пользователей с доступом к заметке
+  rpc ListNoteAccesses(ListNoteAccessesRequest) returns (ListNoteAccessesResponse) {
+    option (google.api.http) = {
+      get: "/v1/notes/{note_id}/accesses"
+    };
+  }
+
+  // GetMySharedNotes получает список заметок, к которым у пользователя есть совместный доступ
+  rpc GetMySharedNotes(GetMySharedNotesRequest) returns (GetMySharedNotesResponse) {
+    option (google.api.http) = {
+      get: "/v1/notes/shared/with-me"
+    };
+  }
+
+  // GetNotesSharingHistory получает историю предоставления доступа к заметке
+  rpc GetNotesSharingHistory(GetNotesSharingHistoryRequest) returns (GetNotesSharingHistoryResponse) {
+    option (google.api.http) = {
+      get: "/v1/notes/{note_id}/sharing-history"
+    };
+  }
+
+  // TransferNoteOwnership передает право владения заметкой другому пользователю
+  rpc TransferNoteOwnership(TransferNoteOwnershipRequest) returns (NoteOwnershipResponse) {
+    option (google.api.http) = {
+      post: "/v1/notes/{note_id}/transfer-ownership"
+      body: "*"
+    };
+  }
+
+  // GetSharingError возвращает стандартизированную ошибку для сервиса совместного доступа
+  rpc GetSharingError(GetSharingErrorRequest) returns (common.v1.ErrorResponse) {}
+  
+  // ValidateSharingOperation проверяет возможность выполнения операции совместного доступа
+  rpc ValidateSharingOperation(ValidateSharingRequest) returns (ValidateSharingResponse) {}
+
+}
+
+// Уровень доступа к заметке
+enum NoteAccessLevel {
+  // Неизвестный уровень доступа (значение по умолчанию)
+  NOTE_ACCESS_LEVEL_UNSPECIFIED = 0;
+  
+  // Доступ только для чтения
+  NOTE_ACCESS_LEVEL_READ = 1;
+  
+  // Доступ для чтения и комментирования
+  NOTE_ACCESS_LEVEL_COMMENT = 2;
+  
+  // Доступ для чтения и редактирования
+  NOTE_ACCESS_LEVEL_EDIT = 3;
+}
+
+// Запрос на предоставление доступа к заметке
+message ShareNoteRequest {
+  // ID заметки
+  string note_id = 1;
+  
+  // Email пользователя, которому предоставляется доступ
+  string user_email = 2;
+  
+  // Уровень доступа к заметке
+  NoteAccessLevel access_level = 3;
+  
+  // Персональное сообщение для приглашаемого пользователя (опционально)
+  optional string message = 4;
+  
+  // Если true, будет отправлено уведомление пользователю
+  bool send_notification = 5;
+  
+  // Если true и заметка находится в боксе, пользователь получит доступ ко всему боксу
+  bool share_parent_box = 6;
+}
+
+// Ответ с информацией о предоставленном доступе
+message ShareNoteResponse {
+  // Информация о предоставленном доступе
+  NoteAccess access = 1;
+  
+  // ID сгенерированного уведомления (если было запрошено)
+  optional string notification_id = 2;
+}
+
+// Запрос на изменение уровня доступа к заметке
+message UpdateNoteAccessRequest {
+  // ID заметки
+  string note_id = 1;
+  
+  // ID записи о доступе
+  string access_id = 2;
+  
+  // Новый уровень доступа
+  NoteAccessLevel access_level = 3;
+  
+  // Если true, будет отправлено уведомление пользователю об изменении уровня доступа
+  bool send_notification = 4;
+}
+
+// Запрос на отзыв доступа к заметке
+message RevokeNoteAccessRequest {
+  // ID заметки
+  string note_id = 1;
+  
+  // ID записи о доступе
+  string access_id = 2;
+  
+  // Если true, будет отправлено уведомление пользователю об отзыве доступа
+  bool send_notification = 3;
+}
+
+// Запрос на получение списка пользователей с доступом к заметке
+message ListNoteAccessesRequest {
+  // ID заметки
+  string note_id = 1;
+}
+
+// Ответ со списком пользователей с доступом к заметке
+message ListNoteAccessesResponse {
+  // Список пользователей с доступом
+  repeated NoteAccess accesses = 1;
+  
+  // Информация о владельце заметки
+  NoteOwner owner = 2;
+}
+
+// Запрос на получение списка заметок, к которым у пользователя есть совместный доступ
+message GetMySharedNotesRequest {
+  // Максимальное количество заметок для получения
+  int32 limit = 1;
+  
+  // Смещение для пагинации
+  int32 offset = 2;
+  
+  // Фильтр по уровню доступа (опционально)
+  optional NoteAccessLevel access_level = 3;
+  
+  // Фильтр по пользователю, предоставившему доступ (опционально)
+  optional string shared_by_user_id = 4;
+}
+
+// Ответ со списком заметок с совместным доступом
+message GetMySharedNotesResponse {
+  // Список заметок с информацией о доступе
+  repeated SharedNoteInfo shared_notes = 1;
+  
+  // Общее количество доступных заметок
+  int32 total_count = 2;
+}
+
+// Запрос на получение истории предоставления доступа к заметке
+message GetNotesSharingHistoryRequest {
+  // ID заметки
+  string note_id = 1;
+  
+  // Максимальное количество записей для получения
+  int32 limit = 2;
+  
+  // Смещение для пагинации
+  int32 offset = 3;
+}
+
+// Ответ с историей предоставления доступа
+message GetNotesSharingHistoryResponse {
+  // События истории
+  repeated SharingHistoryEvent events = 1;
+  
+  // Общее количество событий
+  int32 total_count = 2;
+}
+
+// Запрос на передачу права владения заметкой
+message TransferNoteOwnershipRequest {
+  // ID заметки
+  string note_id = 1;
+  
+  // ID пользователя, которому передается право владения
+  string new_owner_id = 2;
+  
+  // Если true, текущий владелец сохранит доступ к заметке с указанным уровнем
+  bool keep_access = 3;
+  
+  // Уровень доступа, который сохранит текущий владелец (если keep_access = true)
+  NoteAccessLevel retained_access_level = 4;
+  
+  // Если true, будет отправлено уведомление новому владельцу
+  bool send_notification = 5;
+}
+
+// Ответ с информацией о новом владельце
+message NoteOwnershipResponse {
+  // Информация о новом владельце
+  NoteOwner new_owner = 1;
+  
+  // Информация о доступе предыдущего владельца (если он сохранил доступ)
+  optional NoteAccess previous_owner_access = 2;
+}
+
+// Информация о доступе к заметке
+message NoteAccess {
+  // ID записи о доступе
+  string access_id = 1;
+  
+  // ID заметки
+  string note_id = 2;
+  
+  // ID пользователя, которому предоставлен доступ
+  string user_id = 3;
+  
+  // Email пользователя
+  string user_email = 4;
+  
+  // Имя пользователя
+  string username = 5;
+  
+  // Уровень доступа
+  NoteAccessLevel access_level = 6;
+  
+  // ID пользователя, предоставившего доступ
+  string granted_by_user_id = 7;
+  
+  // Имя пользователя, предоставившего доступ
+  string granted_by_username = 8;
+  
+  // Время предоставления доступа
+  google.protobuf.Timestamp granted_at = 9;
+  
+  // Время последнего изменения доступа
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+// Информация о владельце заметки
+message NoteOwner {
+  // ID пользователя-владельца
+  string user_id = 1;
+  
+  // Email пользователя
+  string user_email = 2;
+  
+  // Имя пользователя
+  string username = 3;
+  
+  // Время, когда пользователь стал владельцем
+  google.protobuf.Timestamp owner_since = 4;
+}
+
+// Информация о заметке с совместным доступом
+message SharedNoteInfo {
+  // Основная информация о заметке
+  string note_id = 1;
+  string title = 2;
+  optional string preview = 3;
+  
+  // Информация о владельце заметки
+  string owner_id = 4;
+  string owner_username = 5;
+  
+  // Информация о доступе текущего пользователя
+  NoteAccessLevel access_level = 6;
+  google.protobuf.Timestamp access_granted_at = 7;
+  
+  // Время последнего изменения заметки
+  google.protobuf.Timestamp last_modified_at = 8;
+}
+
+// Тип события в истории совместного доступа
+enum SharingEventType {
+  // Неизвестный тип события
+  SHARING_EVENT_TYPE_UNSPECIFIED = 0;
+  
+  // Предоставление доступа
+  SHARING_EVENT_TYPE_ACCESS_GRANTED = 1;
+  
+  // Изменение уровня доступа
+  SHARING_EVENT_TYPE_ACCESS_CHANGED = 2;
+  
+  // Отзыв доступа
+  SHARING_EVENT_TYPE_ACCESS_REVOKED = 3;
+  
+  // Передача права владения
+  SHARING_EVENT_TYPE_OWNERSHIP_TRANSFERRED = 4;
+}
+
+// Событие в истории совместного доступа
+message SharingHistoryEvent {
+  // ID события
+  string event_id = 1;
+  
+  // Тип события
+  SharingEventType event_type = 2;
+  
+  // ID заметки
+  string note_id = 3;
+  
+  // ID пользователя, выполнившего действие
+  string actor_id = 4;
+  
+  // Имя пользователя, выполнившего действие
+  string actor_username = 5;
+  
+  // ID целевого пользователя (кому предоставлен/изменен/отозван доступ)
+  string target_user_id = 6;
+  
+  // Имя целевого пользователя
+  string target_username = 7;
+  
+  // Предыдущий уровень доступа (для события изменения доступа)
+  optional NoteAccessLevel previous_access_level = 8;
+  
+  // Новый уровень доступа (для событий предоставления и изменения доступа)
+  optional NoteAccessLevel new_access_level = 9;
+  
+  // Время события
+  google.protobuf.Timestamp created_at = 10;
+  
+  // Дополнительная информация о событии
+  map<string, string> metadata = 11;
+}
+
+// Ответ с информацией о доступе к заметке
+message NoteAccessResponse {
+  // Обновленная информация о доступе
+  NoteAccess access = 1;
+}
+
+// Запрос на получение ошибки сервиса совместного доступа
+message GetSharingErrorRequest {
+  // Код ошибки
+  common.v1.ErrorCode error_code = 1;
+  
+  // Дополнительные параметры для форматирования сообщения об ошибке
+  map<string, string> params = 2;
+}
+
+// Запрос на валидацию операции совместного доступа
+message ValidateSharingRequest {
+  // ID заметки
+  string note_id = 1;
+  
+  // Email пользователя, с которым происходит совместное использование
+  string target_email = 2;
+  
+  // Тип операции совместного доступа
+  SharingEventType operation_type = 3;
+  
+  // Уровень доступа (для предоставления или изменения доступа)
+  optional NoteAccessLevel access_level = 4;
+}
+
+// Ответ на валидацию операции совместного доступа
+message ValidateSharingResponse {
+  // Может ли операция быть выполнена
+  bool can_proceed = 1;
+  
+  // Информация об ошибке (если операция не может быть выполнена)
+  optional common.v1.ErrorResponse error = 2;
+}

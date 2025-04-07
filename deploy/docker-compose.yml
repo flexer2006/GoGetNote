@@ -1,0 +1,69 @@
+services:
+  postgres-auth:
+    build:
+      context: ../
+      dockerfile: build/docker/postgres.Dockerfile
+    container_name: gogetnote-postgres-auth
+    environment:
+      POSTGRES_USER: ${POSTGRES_AUTH_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_AUTH_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_AUTH_DB}
+    ports:
+      - "${POSTGRES_AUTH_PORT}:5432"
+    volumes:
+      - postgres-auth-data:/var/lib/postgresql/data
+    networks:
+      - gogetnote-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_AUTH_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-notes:
+    build:
+      context: ../
+      dockerfile: build/docker/postgres.Dockerfile
+    container_name: gogetnote-postgres-notes
+    environment:
+      POSTGRES_USER: ${POSTGRES_NOTES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_NOTES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_NOTES_DB}
+    ports:
+      - "${POSTGRES_NOTES_PORT}:5432"
+    volumes:
+      - postgres-notes-data:/var/lib/postgresql/data
+    networks:
+      - gogetnote-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_NOTES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    build:
+      context: ../
+      dockerfile: build/docker/redis.Dockerfile
+    container_name: gogetnote-redis
+    ports:
+      - "${REDIS_PORT}:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    networks:
+      - gogetnote-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  gogetnote-network:
+    driver: bridge
+
+volumes:
+  postgres-auth-data:
+  postgres-notes-data:
+  redis-data:

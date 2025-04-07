@@ -1,0 +1,293 @@
+syntax = "proto3";
+
+package notes.v1;
+
+import "api/google/api/annotations.proto";
+import "api/google/protobuf/timestamp.proto";
+import "api/google/protobuf/empty.proto";
+import "api/common/v1/pagination.proto";
+import "api/common/v1/metadata.proto";
+import "api/common/v1/errors.proto";
+
+option go_package = "gitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/notes/v1;notesv1";
+
+// NoteService предоставляет методы для работы с заметками
+service NoteService {
+  // CreateNote создает новую заметку
+  rpc CreateNote(CreateNoteRequest) returns (NoteResponse) {
+    option (google.api.http) = {
+      post: "/v1/notes"
+      body: "*"
+    };
+  }
+
+  // GetNote получает заметку по ID
+  rpc GetNote(GetNoteRequest) returns (NoteResponse) {
+    option (google.api.http) = {
+      get: "/v1/notes/{note_id}"
+    };
+  }
+
+  // ListNotes получает список заметок пользователя с возможностью фильтрации и пагинации
+  rpc ListNotes(ListNotesRequest) returns (ListNotesResponse) {
+    option (google.api.http) = {
+      get: "/v1/notes"
+    };
+  }
+
+  // UpdateNote обновляет существующую заметку
+  rpc UpdateNote(UpdateNoteRequest) returns (NoteResponse) {
+    option (google.api.http) = {
+      patch: "/v1/notes/{note_id}"
+      body: "*"
+    };
+  }
+
+  // DeleteNote удаляет заметку
+  rpc DeleteNote(DeleteNoteRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1/notes/{note_id}"
+    };
+  }
+
+  // SearchNotes выполняет поиск по заметкам пользователя
+  rpc SearchNotes(SearchNotesRequest) returns (ListNotesResponse) {
+    option (google.api.http) = {
+      get: "/v1/notes/search"
+    };
+  }
+   // GetNoteError возвращает стандартизированную ошибку для сервиса заметок
+   rpc GetNoteError(GetNoteErrorRequest) returns (common.v1.ErrorResponse) {}
+}
+
+// Статус заметки
+enum NoteStatus {
+  // Неизвестный статус (значение по умолчанию)
+  NOTE_STATUS_UNSPECIFIED = 0;
+  
+  // Активная заметка
+  NOTE_STATUS_ACTIVE = 1;
+  
+  // Архивированная заметка
+  NOTE_STATUS_ARCHIVED = 2;
+  
+  // Заметка в корзине
+  NOTE_STATUS_TRASHED = 3;
+}
+
+// Приоритет заметки
+enum NotePriority {
+  // Неизвестный приоритет (значение по умолчанию)
+  NOTE_PRIORITY_UNSPECIFIED = 0;
+  
+  // Низкий приоритет
+  NOTE_PRIORITY_LOW = 1;
+  
+  // Средний приоритет
+  NOTE_PRIORITY_MEDIUM = 2;
+  
+  // Высокий приоритет
+  NOTE_PRIORITY_HIGH = 3;
+  
+  // Критический приоритет
+  NOTE_PRIORITY_CRITICAL = 4;
+}
+
+// Запрос на создание заметки
+message CreateNoteRequest {
+  // Заголовок заметки
+  string title = 1;
+  
+  // Текст заметки
+  string content = 2;
+  
+  // Список тегов
+  repeated string tags = 3;
+  
+  // Цвет заметки (HEX код, например, "#FFFF00" для желтого)
+  optional string color = 4;
+  
+  // Приоритет заметки
+  optional NotePriority priority = 5;
+  
+  // ID бокса, в который нужно добавить заметку (если не указан, заметка добавляется в корневой бокс)
+  optional string box_id = 6;
+  
+  // Дополнительные метаданные
+  map<string, string> metadata = 7;
+  
+  // Геоданные заметки (опционально)
+  optional common.v1.GeoMetadata geo_metadata = 8;
+  
+  // Напоминание для заметки (опционально)
+  optional common.v1.ReminderMetadata reminder = 9;
+}
+
+// Запрос на получение заметки
+message GetNoteRequest {
+  // ID заметки
+  string note_id = 1;
+}
+
+// Запрос на получение списка заметок
+message ListNotesRequest {
+  // Параметры пагинации
+  common.v1.PaginationRequest pagination = 1;
+  
+  // Фильтр по статусу заметок
+  optional NoteStatus status = 2;
+  
+  // Фильтр по тегам (если указано несколько тегов, возвращаются заметки с любым из указанных тегов)
+  repeated string tags = 3;
+  
+  // Фильтр по боксу (если указан, возвращаются только заметки из указанного бокса)
+  optional string box_id = 4;
+  
+  // Фильтр по приоритету
+  optional NotePriority priority = 5;
+  
+  // Параметры сортировки
+  common.v1.SortRequest sort = 6;
+}
+
+// Ответ со списком заметок
+message ListNotesResponse {
+  // Список заметок
+  repeated Note notes = 1;
+  
+  // Метаданные пагинации
+  common.v1.PaginationResponse pagination = 2;
+}
+
+// Запрос на обновление заметки
+message UpdateNoteRequest {
+  // ID заметки для обновления
+  string note_id = 1;
+  
+  // Новый заголовок заметки (опционально)
+  optional string title = 2;
+  
+  // Новый текст заметки (опционально)
+  optional string content = 3;
+  
+  // Новый список тегов (если передан пустой массив, все теги удаляются)
+  repeated string tags = 4;
+  
+  // Новый цвет заметки (опционально)
+  optional string color = 5;
+  
+  // Новый приоритет заметки (опционально)
+  optional NotePriority priority = 6;
+  
+  // Новый статус заметки (опционально)
+  optional NoteStatus status = 7;
+  
+  // Перемещение заметки в новый бокс (опционально)
+  optional string box_id = 8;
+  
+  // Дополнительные метаданные (опционально)
+  map<string, string> metadata = 9;
+  
+  // Новые геоданные заметки (опционально)
+  optional common.v1.GeoMetadata geo_metadata = 10;
+  
+  // Новое напоминание для заметки (опционально)
+  optional common.v1.ReminderMetadata reminder = 11;
+  
+  // Если true, удаляет существующее геометаданные
+  bool clear_geo_metadata = 12;
+  
+  // Если true, удаляет существующее напоминание
+  bool clear_reminder = 13;
+}
+
+// Запрос на удаление заметки
+message DeleteNoteRequest {
+  // ID заметки для удаления
+  string note_id = 1;
+  
+  // Если true, заметка будет полностью удалена из системы
+  // Если false (по умолчанию), заметка будет перемещена в корзину
+  bool hard_delete = 2;
+}
+
+// Запрос на поиск заметок
+message SearchNotesRequest {
+  // Поисковый запрос
+  string query = 1;
+  
+  // Параметры пагинации
+  common.v1.PaginationRequest pagination = 2;
+  
+  // Фильтр по статусу заметок
+  optional NoteStatus status = 3;
+  
+  // Фильтр по тегам
+  repeated string tags = 4;
+  
+  // Фильтр поиска по заголовкам
+  bool search_in_titles = 5;
+  
+  // Фильтр поиска по содержимому заметок
+  bool search_in_content = 6;
+  
+  // Фильтр поиска по тегам
+  bool search_in_tags = 7;
+  
+  // Параметры сортировки
+  common.v1.SortRequest sort = 8;
+}
+
+// Структура заметки
+message Note {
+  // Уникальный идентификатор заметки
+  string note_id = 1;
+  
+  // ID пользователя, создавшего заметку
+  string user_id = 2;
+  
+  // Заголовок заметки
+  string title = 3;
+  
+  // Текст заметки
+  string content = 4;
+  
+  // Список тегов
+  repeated string tags = 5;
+  
+  // Статус заметки
+  NoteStatus status = 6;
+  
+  // Цвет заметки (HEX код)
+  string color = 7;
+  
+  // Приоритет заметки
+  NotePriority priority = 8;
+  
+  // ID бокса, в котором находится заметка (null для корневого бокса)
+  optional string box_id = 9;
+  
+  // Метаданные объекта
+  common.v1.Metadata metadata = 10;
+  
+  // Время удаления заметки (если заметка в корзине)
+  optional google.protobuf.Timestamp deleted_at = 11;
+  
+  // Дополнительные метаданные
+  map<string, string> custom_attributes = 12;
+}
+
+// Ответ с информацией о заметке
+message NoteResponse {
+  // Заметка
+  Note note = 1;
+}
+
+// Запрос на получение ошибки сервиса заметок
+message GetNoteErrorRequest {
+  // Код ошибки
+  common.v1.ErrorCode error_code = 1;
+  
+  // Дополнительные параметры для форматирования сообщения об ошибке
+  map<string, string> params = 2;
+}

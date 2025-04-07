@@ -1,0 +1,206 @@
+syntax = "proto3";
+
+package auth.v1;
+
+import "api/google/api/annotations.proto";
+import "api/google/protobuf/timestamp.proto";
+import "api/google/protobuf/empty.proto";
+import "api/common/v1/pagination.proto";
+
+option go_package = "gitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/auth/v1;authv1";
+
+// NotificationService предоставляет методы для работы с уведомлениями пользователя
+service NotificationService {
+  // ListNotifications получает список уведомлений для текущего пользователя
+  rpc ListNotifications(ListNotificationsRequest) returns (ListNotificationsResponse) {
+    option (google.api.http) = {
+      get: "/v1/notifications"
+    };
+  }
+
+  // UpdateNotification обновляет статус одного уведомления
+  rpc UpdateNotification(UpdateNotificationRequest) returns (NotificationResponse) {
+    option (google.api.http) = {
+      patch: "/v1/notifications/{notification_id}"
+      body: "*"
+    };
+  }
+
+  // BatchUpdateNotifications пакетно обновляет статусы нескольких уведомлений
+  rpc BatchUpdateNotifications(BatchUpdateNotificationsRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      patch: "/v1/notifications"
+      body: "*"
+    };
+  }
+
+  // SubscribeToUserNotifications подписывается на канал уведомлений пользователя
+  // Это внутренний метод для создания стриминга уведомлений через WebSockets
+  rpc SubscribeToUserNotifications(SubscribeRequest) returns (stream NotificationEvent) {}
+
+  // SendNotification отправляет уведомление пользователю (внутренний метод для других сервисов)
+  rpc SendNotification(SendNotificationRequest) returns (google.protobuf.Empty) {}
+}
+
+// Тип уведомления
+enum NotificationType {
+  // Неизвестный тип уведомления (значение по умолчанию)
+  NOTIFICATION_TYPE_UNSPECIFIED = 0;
+  
+  // Системное уведомление от приложения
+  NOTIFICATION_TYPE_SYSTEM = 1;
+  
+  // Уведомление о предоставленном доступе к боксу
+  NOTIFICATION_TYPE_BOX_ACCESS_GRANTED = 2;
+  
+  // Уведомление об изменении уровня доступа к боксу
+  NOTIFICATION_TYPE_BOX_ACCESS_CHANGED = 3;
+  
+  // Уведомление об отзыве доступа к боксу
+  NOTIFICATION_TYPE_BOX_ACCESS_REVOKED = 4;
+  
+  // Уведомление о приглашении к сотрудничеству над заметкой
+  NOTIFICATION_TYPE_NOTE_COLLABORATION = 5;
+}
+
+// Статус уведомления
+enum NotificationStatus {
+  // Неизвестный статус уведомления (значение по умолчанию)
+  NOTIFICATION_STATUS_UNSPECIFIED = 0;
+  
+  // Непрочитанное уведомление
+  NOTIFICATION_STATUS_UNREAD = 1;
+  
+  // Прочитанное уведомление
+  NOTIFICATION_STATUS_READ = 2;
+}
+
+// Запрос на получение списка уведомлений
+message ListNotificationsRequest {
+  // Параметры пагинации
+  common.v1.PaginationRequest pagination = 1;
+  
+  // Фильтр по статусу уведомлений (опционально)
+  optional NotificationStatus status = 2;
+  
+  // Фильтр по типу уведомлений (опционально)
+  optional NotificationType type = 3;
+  
+  // Параметры сортировки
+  common.v1.SortRequest sort = 4;
+}
+
+// Ответ со списком уведомлений
+message ListNotificationsResponse {
+  // Список уведомлений
+  repeated NotificationMessage notifications = 1;
+  
+  // Метаданные пагинации
+  common.v1.PaginationResponse pagination = 2;
+  
+  // Количество непрочитанных уведомлений
+  int32 unread_count = 3;
+}
+
+// Структура уведомления
+message NotificationMessage {
+  // Уникальный идентификатор уведомления
+  string notification_id = 1;
+  
+  // Тип уведомления
+  NotificationType type = 2;
+  
+  // Заголовок уведомления
+  string title = 3;
+  
+  // Текст уведомления
+  string content = 4;
+  
+  // Статус уведомления
+  NotificationStatus status = 5;
+  
+  // Время создания уведомления
+  google.protobuf.Timestamp created_at = 6;
+  
+  // Время последнего обновления уведомления
+  google.protobuf.Timestamp updated_at = 7;
+  
+  // Дополнительные данные в зависимости от типа уведомления
+  map<string, string> metadata = 8;
+}
+
+// Запрос на обновление статуса уведомления
+message UpdateNotificationRequest {
+  // ID уведомления для обновления
+  string notification_id = 1;
+  
+  // Новый статус уведомления
+  NotificationStatus status = 2;
+}
+
+// Ответ с обновленным уведомлением
+message NotificationResponse {
+  // Обновленное уведомление
+  NotificationMessage notification = 1;
+}
+
+// Запрос на пакетное обновление статусов уведомлений
+message BatchUpdateNotificationsRequest {
+  // Список ID уведомлений для обновления
+  repeated string notification_ids = 1;
+  
+  // Новый статус для всех указанных уведомлений
+  NotificationStatus status = 2;
+  
+  // Если true, то все уведомления пользователя будут обновлены
+  bool update_all = 3;
+}
+
+// Запрос на подписку на уведомления
+message SubscribeRequest {
+  // Идентификатор пользователя, чьи уведомления нужно отслеживать
+  // (Обычно извлекается из авторизационного токена)
+  string user_id = 1;
+}
+
+// Событие уведомления для потоковой передачи
+message NotificationEvent {
+  // Тип события
+  enum EventType {
+    // Неизвестный тип события
+    EVENT_TYPE_UNSPECIFIED = 0;
+    
+    // Новое уведомление
+    EVENT_TYPE_NEW = 1;
+    
+    // Обновление существующего уведомления
+    EVENT_TYPE_UPDATED = 2;
+    
+    // Удаление уведомления
+    EVENT_TYPE_DELETED = 3;
+  }
+  
+  // Тип события
+  EventType event_type = 1;
+  
+  // Данные уведомления
+  NotificationMessage notification = 2;
+}
+
+// Запрос на отправку уведомления пользователю (внутренний метод)
+message SendNotificationRequest {
+  // ID пользователя, которому отправляется уведомление
+  string user_id = 1;
+  
+  // Тип уведомления
+  NotificationType type = 2;
+  
+  // Заголовок уведомления
+  string title = 3;
+  
+  // Текст уведомления
+  string content = 4;
+  
+  // Дополнительные данные в зависимости от типа уведомления
+  map<string, string> metadata = 5;
+}

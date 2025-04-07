@@ -1,0 +1,257 @@
+syntax = "proto3";
+
+package common.v1;
+
+import "api/google/protobuf/timestamp.proto";
+import "api/google/protobuf/any.proto";
+
+option go_package = "gitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/common/v1;commonv1";
+
+// Metadata представляет общую структуру метаданных для различных объектов системы
+message Metadata {
+  // Информация о создании объекта
+  CreationInfo creation_info = 1;
+  
+  // Информация о последнем изменении объекта
+  ModificationInfo modification_info = 2;
+  
+  // Произвольные пары ключ-значение для хранения дополнительных метаданных
+  map<string, string> attributes = 3;
+  
+  // Список тегов, связанных с объектом
+  repeated string tags = 4;
+  
+  // Цветовая метка (HEX код, например "#4285F4" для синего)
+  optional string color = 5;
+  
+  // Приоритет объекта (от 0 до 100, где 100 - наивысший приоритет)
+  optional int32 priority = 6;
+  
+  // Версия объекта (инкрементируется при каждом изменении)
+  int64 version = 7;
+  
+  // Расширенные метаданные в произвольных форматах
+  repeated google.protobuf.Any extended_metadata = 8;
+}
+
+// CreationInfo содержит информацию о создании объекта
+message CreationInfo {
+  // Время создания объекта
+  google.protobuf.Timestamp created_at = 1;
+  
+  // ID пользователя, создавшего объект
+  string created_by_user_id = 2;
+  
+  // Имя пользователя, создавшего объект (для отображения)
+  string created_by_username = 3;
+  
+  // IP адрес, с которого был создан объект
+  optional string source_ip = 4;
+  
+  // Клиентское устройство или приложение, с которого был создан объект
+  optional string user_agent = 5;
+}
+
+// ModificationInfo содержит информацию о последнем изменении объекта
+message ModificationInfo {
+  // Время последнего изменения объекта
+  google.protobuf.Timestamp modified_at = 1;
+  
+  // ID пользователя, последним изменившего объект
+  string modified_by_user_id = 2;
+  
+  // Имя пользователя, последним изменившего объект
+  string modified_by_username = 3;
+  
+  // IP адрес, с которого было выполнено последнее изменение
+  optional string source_ip = 4;
+  
+  // Клиентское устройство или приложение, с которого было выполнено последнее изменение
+  optional string user_agent = 5;
+  
+  // Описание изменения
+  optional string change_description = 6;
+}
+
+// Tag представляет тег с дополнительной информацией
+message Tag {
+  // Имя тега
+  string name = 1;
+  
+  // Цвет тега (HEX код)
+  optional string color = 2;
+  
+  // Описание тега
+  optional string description = 3;
+  
+  // Время создания тега
+  google.protobuf.Timestamp created_at = 4;
+}
+
+// UserDefinedField представляет пользовательское поле
+message UserDefinedField {
+  // Идентификатор поля
+  string id = 1;
+  
+  // Название поля
+  string name = 2;
+  
+  // Тип значения поля
+  enum FieldType {
+    // Неизвестный тип (значение по умолчанию)
+    FIELD_TYPE_UNSPECIFIED = 0;
+    
+    // Строковое поле
+    FIELD_TYPE_STRING = 1;
+    
+    // Числовое поле
+    FIELD_TYPE_NUMBER = 2;
+    
+    // Логическое поле (истина/ложь)
+    FIELD_TYPE_BOOLEAN = 3;
+    
+    // Поле даты/времени
+    FIELD_TYPE_DATETIME = 4;
+    
+    // Поле с выбором из списка
+    FIELD_TYPE_ENUM = 5;
+  }
+  
+  // Тип поля
+  FieldType type = 3;
+  
+  // Значение поля
+  oneof value {
+    string string_value = 4;
+    double number_value = 5;
+    bool boolean_value = 6;
+    google.protobuf.Timestamp datetime_value = 7;
+    string enum_value = 8;
+  }
+  
+  // Время создания пользовательского поля
+  google.protobuf.Timestamp created_at = 9;
+  
+  // Время последнего обновления пользовательского поля
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+// ActivityRecord представляет запись об активности в системе
+message ActivityRecord {
+  // Уникальный идентификатор записи
+  string record_id = 1;
+  
+  // Тип активности
+  enum ActivityType {
+    // Неизвестный тип активности (значение по умолчанию)
+    ACTIVITY_TYPE_UNSPECIFIED = 0;
+    
+    // Создание
+    ACTIVITY_TYPE_CREATE = 1;
+    
+    // Изменение
+    ACTIVITY_TYPE_UPDATE = 2;
+    
+    // Удаление
+    ACTIVITY_TYPE_DELETE = 3;
+    
+    // Перемещение
+    ACTIVITY_TYPE_MOVE = 4;
+    
+    // Совместный доступ
+    ACTIVITY_TYPE_SHARE = 5;
+    
+    // Экспорт
+    ACTIVITY_TYPE_EXPORT = 6;
+    
+    // Импорт
+    ACTIVITY_TYPE_IMPORT = 7;
+  }
+  
+  // Тип активности
+  ActivityType activity_type = 2;
+  
+  // ID объекта, с которым связана активность
+  string object_id = 3;
+  
+  // Тип объекта (например, "заметка", "бокс")
+  string object_type = 4;
+  
+  // ID пользователя, выполнившего действие
+  string user_id = 5;
+  
+  // Время активности
+  google.protobuf.Timestamp timestamp = 6;
+  
+  // Описание активности
+  string description = 7;
+  
+  // Дополнительные параметры активности
+  map<string, string> parameters = 8;
+}
+
+// Структура для добавления геоинформации к объектам
+message GeoMetadata {
+  // Широта в десятичных градусах
+  double latitude = 1;
+  
+  // Долгота в десятичных градусах
+  double longitude = 2;
+  
+  // Описание местоположения (например, адрес)
+  optional string location_description = 3;
+  
+  // Точность геоданных в метрах
+  optional double accuracy = 4;
+}
+
+// Структура для хранения настроек напоминаний
+message ReminderMetadata {
+  // Время напоминания
+  google.protobuf.Timestamp remind_at = 1;
+  
+  // Состояние напоминания
+  enum ReminderState {
+    // Неизвестное состояние (значение по умолчанию)
+    REMINDER_STATE_UNSPECIFIED = 0;
+    
+    // Активное напоминание
+    REMINDER_STATE_ACTIVE = 1;
+    
+    // Выполненное напоминание
+    REMINDER_STATE_COMPLETED = 2;
+    
+    // Отмененное напоминание
+    REMINDER_STATE_CANCELLED = 3;
+  }
+  
+  // Состояние напоминания
+  ReminderState state = 2;
+  
+  // Повторение напоминания
+  enum RepeatInterval {
+    // Без повторения (значение по умолчанию)
+    REPEAT_INTERVAL_NONE = 0;
+    
+    // Ежедневное повторение
+    REPEAT_INTERVAL_DAILY = 1;
+    
+    // Еженедельное повторение
+    REPEAT_INTERVAL_WEEKLY = 2;
+    
+    // Ежемесячное повторение
+    REPEAT_INTERVAL_MONTHLY = 3;
+    
+    // Ежегодное повторение
+    REPEAT_INTERVAL_YEARLY = 4;
+    
+    // Пользовательский интервал
+    REPEAT_INTERVAL_CUSTOM = 5;
+  }
+  
+  // Интервал повторения
+  RepeatInterval repeat_interval = 3;
+  
+  // Пользовательский интервал в минутах (для REPEAT_INTERVAL_CUSTOM)
+  optional int32 custom_interval_minutes = 4;
+}

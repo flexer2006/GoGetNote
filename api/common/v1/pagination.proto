@@ -1,0 +1,151 @@
+syntax = "proto3";
+
+package common.v1;
+
+option go_package = "gitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/common/v1;commonv1";
+
+// Pagination содержит параметры для пагинации списков в запросах
+message PaginationRequest {
+  // Максимальное количество элементов для получения (размер страницы)
+  // По умолчанию: 20, максимум: 100
+  int32 limit = 1;
+  
+  // Смещение для пагинации (начиная с какого элемента)
+  int32 offset = 2;
+  
+  // Альтернативный способ пагинации с использованием курсора
+  // Курсор представляет собой зашифрованную строку, которая указывает
+  // на определенное место в списке. Если задан cursor, параметры
+  // limit и offset игнорируются.
+  optional string cursor = 3;
+}
+
+// PaginationResponse содержит метаданные о пагинации для ответов
+message PaginationResponse {
+  // Общее количество доступных элементов
+  int32 total_count = 1;
+  
+  // Смещение, использованное в запросе
+  int32 offset = 2;
+  
+  // Размер страницы, использованный в запросе
+  int32 limit = 3;
+  
+  // Есть ли следующая страница
+  bool has_next = 4;
+  
+  // Есть ли предыдущая страница
+  bool has_prev = 5;
+  
+  // Номер текущей страницы (начиная с 1)
+  int32 page = 6;
+  
+  // Общее количество страниц
+  int32 total_pages = 7;
+  
+  // Курсор для следующей страницы (если доступен)
+  optional string next_cursor = 8;
+  
+  // Курсор для предыдущей страницы (если доступен)
+  optional string prev_cursor = 9;
+}
+
+// PageRequest содержит параметры для пагинации с использованием номеров страниц
+message PageRequest {
+  // Номер страницы (начиная с 1)
+  int32 page = 1;
+  
+  // Количество элементов на странице
+  // По умолчанию: 20, максимум: 100
+  int32 page_size = 2;
+}
+
+// SortDirection определяет направление сортировки
+enum SortDirection {
+  // Направление сортировки не указано (используется по умолчанию)
+  SORT_DIRECTION_UNSPECIFIED = 0;
+  
+  // Сортировка по возрастанию (A-Z, 0-9)
+  SORT_DIRECTION_ASC = 1;
+  
+  // Сортировка по убыванию (Z-A, 9-0)
+  SORT_DIRECTION_DESC = 2;
+}
+
+// SortField определяет поле и направление сортировки
+message SortField {
+  // Имя поля для сортировки
+  string field = 1;
+  
+  // Направление сортировки
+  SortDirection direction = 2;
+}
+
+// SortRequest содержит параметры для сортировки списков
+message SortRequest {
+  // Список полей для сортировки в порядке приоритета
+  repeated SortField sort_fields = 1;
+}
+
+// FilterOperator определяет оператор фильтрации
+enum FilterOperator {
+  // Оператор не указан (используется равенство по умолчанию)
+  FILTER_OPERATOR_UNSPECIFIED = 0;
+  
+  // Равенство
+  FILTER_OPERATOR_EQUAL = 1;
+  
+  // Неравенство
+  FILTER_OPERATOR_NOT_EQUAL = 2;
+  
+  // Больше чем
+  FILTER_OPERATOR_GREATER_THAN = 3;
+  
+  // Больше или равно
+  FILTER_OPERATOR_GREATER_THAN_OR_EQUAL = 4;
+  
+  // Меньше чем
+  FILTER_OPERATOR_LESS_THAN = 5;
+  
+  // Меньше или равно
+  FILTER_OPERATOR_LESS_THAN_OR_EQUAL = 6;
+  
+  // Содержит подстроку (для строковых полей)
+  FILTER_OPERATOR_CONTAINS = 7;
+  
+  // Не содержит подстроку (для строковых полей)
+  FILTER_OPERATOR_NOT_CONTAINS = 8;
+  
+  // Начинается с (для строковых полей)
+  FILTER_OPERATOR_STARTS_WITH = 9;
+  
+  // Заканчивается на (для строковых полей)
+  FILTER_OPERATOR_ENDS_WITH = 10;
+  
+  // В списке значений
+  FILTER_OPERATOR_IN = 11;
+  
+  // Не в списке значений
+  FILTER_OPERATOR_NOT_IN = 12;
+}
+
+// FilterCondition определяет условие фильтрации
+message FilterCondition {
+  // Имя поля для фильтрации
+  string field = 1;
+  
+  // Оператор фильтрации
+  FilterOperator operator = 2;
+  
+  // Значение для сравнения
+  string value = 3;
+  
+  // Список значений (используется с операторами IN и NOT_IN)
+  repeated string values = 4;
+}
+
+// FilterRequest содержит параметры для фильтрации списков
+message FilterRequest {
+  // Список условий фильтрации, объединенных логическим И (AND)
+  repeated FilterCondition conditions = 1;
+}
