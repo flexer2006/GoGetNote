@@ -39,7 +39,6 @@ foreach ($protoFile in $protoFiles) {
     }
 }
 
-# Вывод результатов
 $generatedFileCount = (Get-ChildItem -Path $GO_OUT_DIR -Recurse -File).Count
 Write-Host "`nРезультаты генерации:" -ForegroundColor White
 Write-Host "  Успешно обработано файлов: $processedCount из $($protoFiles.Count)" -ForegroundColor Green
