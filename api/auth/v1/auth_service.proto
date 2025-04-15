@@ -2,167 +2,109 @@ syntax = "proto3";
 
 package auth.v1;
 
-import "api/google/api/annotations.proto";
 import "api/google/protobuf/timestamp.proto";
 import "api/google/protobuf/empty.proto";
-import "api/common/v1/errors.proto";
+import "api/google/api/annotations.proto"; // Добавлен импорт для HTTP аннотаций
 
 option go_package = "gitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/auth/v1;authv1";
 
-// AuthService предоставляет методы для аутентификации и управления сессиями пользователей
+// AuthService предоставляет базовые методы аутентификации
 service AuthService {
-  // Register регистрирует нового пользователя в системе
+  // Регистрация нового пользователя
   rpc Register(RegisterRequest) returns (RegisterResponse) {
     option (google.api.http) = {
-      post: "/v1/auth/register"
+      post: "/api/v1/auth/register"
       body: "*"
     };
   }
 
-  // Login аутентифицирует пользователя и возвращает токены доступа
+  // Вход в систему
   rpc Login(LoginRequest) returns (LoginResponse) {
     option (google.api.http) = {
-      post: "/v1/auth/login"
+      post: "/api/v1/auth/login"
       body: "*"
     };
   }
 
-  // RefreshTokens обновляет истекший access token с использованием действительного refresh token
+  // Обновление токена
   rpc RefreshTokens(RefreshTokensRequest) returns (RefreshTokensResponse) {
     option (google.api.http) = {
-      post: "/v1/auth/refresh"
+      post: "/api/v1/auth/refresh"
       body: "*"
     };
   }
 
-  // Logout завершает сессию пользователя и инвалидирует токены
+  // Выход из системы
   rpc Logout(LogoutRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      post: "/v1/auth/logout"
+      post: "/api/v1/auth/logout"
       body: "*"
     };
   }
-
-  // ValidateToken проверяет валидность токена доступа (внутренний метод для API Gateway)
-  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse) {}
-
-  // GetAuthError возвращает стандартизированную ошибку аутентификации
-  rpc GetAuthError(GetAuthErrorRequest) returns (common.v1.ErrorResponse) {}
 }
 
-// Запрос на регистрацию нового пользователя
+// Запрос на регистрацию
 message RegisterRequest {
-  // Email пользователя (уникальный идентификатор)
-  string email = 1;
-  
-  // Имя пользователя
-  string username = 2;
-  
-  // Пароль пользователя
-  string password = 3;
-  
-  // Подтверждение пароля
-  string password_confirmation = 4;
-}
-
-// Ответ на регистрацию пользователя
-message RegisterResponse {
-  // Уникальный идентификатор пользователя
-  string user_id = 1;
-  
-  // Access token для API-запросов
-  string access_token = 2;
-  
-  // Refresh token для обновления access token
-  string refresh_token = 3;
-  
-  // Срок действия access token
-  google.protobuf.Timestamp access_token_expires_at = 4;
-  
-  // Срок действия refresh token
-  google.protobuf.Timestamp refresh_token_expires_at = 5;
-}
-
-// Запрос на аутентификацию пользователя
-message LoginRequest {
   // Email пользователя
   string email = 1;
-  
-  // Пароль пользователя
+  // Имя пользователя
+  string username = 2;
+  // Пароль
+  string password = 3;
+}
+
+// Ответ на регистрацию
+message RegisterResponse {
+  // ID пользователя
+  string user_id = 1;
+  // Токен доступа
+  string access_token = 2;
+  // Токен для обновления
+  string refresh_token = 3;
+  // Срок действия токена
+  google.protobuf.Timestamp expires_at = 4;
+}
+
+// Запрос на вход
+message LoginRequest {
+  // Email
+  string email = 1;
+  // Пароль
   string password = 2;
 }
 
-// Ответ на успешную аутентификацию
+// Ответ на вход
 message LoginResponse {
-  // Уникальный идентификатор пользователя
+  // ID пользователя
   string user_id = 1;
-  
   // Имя пользователя
   string username = 2;
-  
-  // Access token для API-запросов
+  // Токен доступа
   string access_token = 3;
-  
-  // Refresh token для обновления access token
+  // Токен для обновления
   string refresh_token = 4;
-  
-  // Срок действия access token
-  google.protobuf.Timestamp access_token_expires_at = 5;
-  
-  // Срок действия refresh token
-  google.protobuf.Timestamp refresh_token_expires_at = 6;
+  // Срок действия токена
+  google.protobuf.Timestamp expires_at = 5;
 }
 
-// Запрос на обновление токенов
+// Запрос на обновление токена
 message RefreshTokensRequest {
-  // Refresh token, полученный при авторизации
+  // Токен для обновления
   string refresh_token = 1;
 }
 
-// Ответ с новыми токенами
+// Ответ на обновление токена
 message RefreshTokensResponse {
-  // Новый access token
+  // Новый токен доступа
   string access_token = 1;
-  
-  // Новый refresh token
+  // Новый токен для обновления
   string refresh_token = 2;
-  
-  // Срок действия нового access token
-  google.protobuf.Timestamp access_token_expires_at = 3;
-  
-  // Срок действия нового refresh token
-  google.protobuf.Timestamp refresh_token_expires_at = 4;
-}
-
-// Запрос на выход из системы (завершение сессии)
-message LogoutRequest {
-  // Refresh token, который нужно инвалидировать
-  string refresh_token = 1;
-}
-
-// Запрос на валидацию токена (внутренний метод)
-message ValidateTokenRequest {
-  // Access token, который нужно проверить
-  string access_token = 1;
-}
-
-// Ответ на валидацию токена
-message ValidateTokenResponse {
-  // Валиден ли токен
-  bool is_valid = 1;
-  
-  // ID пользователя, которому принадлежит токен
-  string user_id = 2;
-  
-  // Время окончания действия токена
+  // Срок действия токена
   google.protobuf.Timestamp expires_at = 3;
 }
 
-// Запрос на получение ошибки аутентификации
-message GetAuthErrorRequest {
-  // Код ошибки
-  common.v1.ErrorCode error_code = 1;
-  
-  // Дополнительные параметры для форматирования сообщения об ошибке
-  map<string, string> params = 2;
+// Запрос на выход
+message LogoutRequest {
+  // Токен для обновления, который нужно инвалидировать
+  string refresh_token = 1;
 }

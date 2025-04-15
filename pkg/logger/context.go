@@ -5,8 +5,6 @@ import (
 	"fmt"
 )
 
-type contextKey string
-
 const (
 	Key contextKey = "logger"
 )

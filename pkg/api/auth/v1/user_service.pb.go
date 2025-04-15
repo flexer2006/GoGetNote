@@ -10,7 +10,6 @@ import (
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
@@ -24,8 +23,8 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Пустой запрос для получения профиля текущего пользователя
-// Идентификация пользователя происходит через токен в заголовке запроса
+// Пустой запрос для получения профиля
+// Идентификация происходит через токен
 type GetUserProfileRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -62,163 +61,24 @@ func (*GetUserProfileRequest) Descriptor() ([]byte, []int) {
 	return file_api_auth_v1_user_service_proto_rawDescGZIP(), []int{0}
 }
 
-// Запрос на обновление профиля пользователя
-type UpdateUserProfileRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Новое имя пользователя (опционально)
-	Username *string `protobuf:"bytes,1,opt,name=username,proto3,oneof" json:"username,omitempty"`
-	// Новый email пользователя (опционально)
-	Email *string `protobuf:"bytes,2,opt,name=email,proto3,oneof" json:"email,omitempty"`
-	// Текущий пароль (требуется для подтверждения изменений)
-	CurrentPassword string `protobuf:"bytes,3,opt,name=current_password,json=currentPassword,proto3" json:"current_password,omitempty"`
-	// Новый пароль (опционально)
-	NewPassword *string `protobuf:"bytes,4,opt,name=new_password,json=newPassword,proto3,oneof" json:"new_password,omitempty"`
-	// Подтверждение нового пароля (обязательно, если указан новый пароль)
-	NewPasswordConfirmation *string `protobuf:"bytes,5,opt,name=new_password_confirmation,json=newPasswordConfirmation,proto3,oneof" json:"new_password_confirmation,omitempty"`
-	unknownFields           protoimpl.UnknownFields
-	sizeCache               protoimpl.SizeCache
-}
-
-func (x *UpdateUserProfileRequest) Reset() {
-	*x = UpdateUserProfileRequest{}
-	mi := &file_api_auth_v1_user_service_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *UpdateUserProfileRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UpdateUserProfileRequest) ProtoMessage() {}
-
-func (x *UpdateUserProfileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_auth_v1_user_service_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UpdateUserProfileRequest.ProtoReflect.Descriptor instead.
-func (*UpdateUserProfileRequest) Descriptor() ([]byte, []int) {
-	return file_api_auth_v1_user_service_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *UpdateUserProfileRequest) GetUsername() string {
-	if x != nil && x.Username != nil {
-		return *x.Username
-	}
-	return ""
-}
-
-func (x *UpdateUserProfileRequest) GetEmail() string {
-	if x != nil && x.Email != nil {
-		return *x.Email
-	}
-	return ""
-}
-
-func (x *UpdateUserProfileRequest) GetCurrentPassword() string {
-	if x != nil {
-		return x.CurrentPassword
-	}
-	return ""
-}
-
-func (x *UpdateUserProfileRequest) GetNewPassword() string {
-	if x != nil && x.NewPassword != nil {
-		return *x.NewPassword
-	}
-	return ""
-}
-
-func (x *UpdateUserProfileRequest) GetNewPasswordConfirmation() string {
-	if x != nil && x.NewPasswordConfirmation != nil {
-		return *x.NewPasswordConfirmation
-	}
-	return ""
-}
-
-// Запрос на удаление аккаунта пользователя
-type DeleteUserAccountRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Пароль для подтверждения удаления
-	Password string `protobuf:"bytes,1,opt,name=password,proto3" json:"password,omitempty"`
-	// Причина удаления (опционально)
-	Reason        *string `protobuf:"bytes,2,opt,name=reason,proto3,oneof" json:"reason,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *DeleteUserAccountRequest) Reset() {
-	*x = DeleteUserAccountRequest{}
-	mi := &file_api_auth_v1_user_service_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DeleteUserAccountRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DeleteUserAccountRequest) ProtoMessage() {}
-
-func (x *DeleteUserAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_auth_v1_user_service_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DeleteUserAccountRequest.ProtoReflect.Descriptor instead.
-func (*DeleteUserAccountRequest) Descriptor() ([]byte, []int) {
-	return file_api_auth_v1_user_service_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *DeleteUserAccountRequest) GetPassword() string {
-	if x != nil {
-		return x.Password
-	}
-	return ""
-}
-
-func (x *DeleteUserAccountRequest) GetReason() string {
-	if x != nil && x.Reason != nil {
-		return *x.Reason
-	}
-	return ""
-}
-
-// Ответ с информацией о профиле пользователя
+// Ответ с информацией о пользователе
 type UserProfileResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Уникальный идентификатор пользователя
+	// ID пользователя
 	UserId string `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	// Email пользователя
+	// Email
 	Email string `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
 	// Имя пользователя
 	Username string `protobuf:"bytes,3,opt,name=username,proto3" json:"username,omitempty"`
-	// Дата создания аккаунта
-	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	// Дата последнего обновления аккаунта
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// Дата регистрации
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *UserProfileResponse) Reset() {
 	*x = UserProfileResponse{}
-	mi := &file_api_auth_v1_user_service_proto_msgTypes[3]
+	mi := &file_api_auth_v1_user_service_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -230,7 +90,7 @@ func (x *UserProfileResponse) String() string {
 func (*UserProfileResponse) ProtoMessage() {}
 
 func (x *UserProfileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_auth_v1_user_service_proto_msgTypes[3]
+	mi := &file_api_auth_v1_user_service_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -243,7 +103,7 @@ func (x *UserProfileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserProfileResponse.ProtoReflect.Descriptor instead.
 func (*UserProfileResponse) Descriptor() ([]byte, []int) {
-	return file_api_auth_v1_user_service_proto_rawDescGZIP(), []int{3}
+	return file_api_auth_v1_user_service_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *UserProfileResponse) GetUserId() string {
@@ -274,45 +134,20 @@ func (x *UserProfileResponse) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-func (x *UserProfileResponse) GetUpdatedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.UpdatedAt
-	}
-	return nil
-}
-
 var File_api_auth_v1_user_service_proto protoreflect.FileDescriptor
 
 const file_api_auth_v1_user_service_proto_rawDesc = "" +
 	"\n" +
-	"\x1eapi/auth/v1/user_service.proto\x12\aauth.v1\x1a api/google/api/annotations.proto\x1a\x1fapi/google/protobuf/empty.proto\x1a#api/google/protobuf/timestamp.proto\"\x17\n" +
-	"\x15GetUserProfileRequest\"\xb0\x02\n" +
-	"\x18UpdateUserProfileRequest\x12\x1f\n" +
-	"\busername\x18\x01 \x01(\tH\x00R\busername\x88\x01\x01\x12\x19\n" +
-	"\x05email\x18\x02 \x01(\tH\x01R\x05email\x88\x01\x01\x12)\n" +
-	"\x10current_password\x18\x03 \x01(\tR\x0fcurrentPassword\x12&\n" +
-	"\fnew_password\x18\x04 \x01(\tH\x02R\vnewPassword\x88\x01\x01\x12?\n" +
-	"\x19new_password_confirmation\x18\x05 \x01(\tH\x03R\x17newPasswordConfirmation\x88\x01\x01B\v\n" +
-	"\t_usernameB\b\n" +
-	"\x06_emailB\x0f\n" +
-	"\r_new_passwordB\x1c\n" +
-	"\x1a_new_password_confirmation\"^\n" +
-	"\x18DeleteUserAccountRequest\x12\x1a\n" +
-	"\bpassword\x18\x01 \x01(\tR\bpassword\x12\x1b\n" +
-	"\x06reason\x18\x02 \x01(\tH\x00R\x06reason\x88\x01\x01B\t\n" +
-	"\a_reason\"\xd6\x01\n" +
+	"\x1eapi/auth/v1/user_service.proto\x12\aauth.v1\x1a#api/google/protobuf/timestamp.proto\x1a api/google/api/annotations.proto\"\x17\n" +
+	"\x15GetUserProfileRequest\"\x9b\x01\n" +
 	"\x13UserProfileResponse\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1a\n" +
 	"\busername\x18\x03 \x01(\tR\busername\x129\n" +
 	"\n" +
-	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
-	"\n" +
-	"updated_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt2\xc8\x02\n" +
-	"\vUserService\x12d\n" +
-	"\x0eGetUserProfile\x12\x1e.auth.v1.GetUserProfileRequest\x1a\x1c.auth.v1.UserProfileResponse\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/v1/users/me\x12m\n" +
-	"\x11UpdateUserProfile\x12!.auth.v1.UpdateUserProfileRequest\x1a\x1c.auth.v1.UserProfileResponse\"\x17\x82\xd3\xe4\x93\x02\x11:\x01*2\f/v1/users/me\x12d\n" +
-	"\x11DeleteUserAccount\x12!.auth.v1.DeleteUserAccountRequest\x1a\x16.google.protobuf.Empty\"\x14\x82\xd3\xe4\x93\x02\x0e*\f/v1/users/meBZZXgitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/auth/v1;authv1b\x06proto3"
+	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt2w\n" +
+	"\vUserService\x12h\n" +
+	"\x0eGetUserProfile\x12\x1e.auth.v1.GetUserProfileRequest\x1a\x1c.auth.v1.UserProfileResponse\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/api/v1/users/meBZZXgitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/auth/v1;authv1b\x06proto3"
 
 var (
 	file_api_auth_v1_user_service_proto_rawDescOnce sync.Once
@@ -326,29 +161,21 @@ func file_api_auth_v1_user_service_proto_rawDescGZIP() []byte {
 	return file_api_auth_v1_user_service_proto_rawDescData
 }
 
-var file_api_auth_v1_user_service_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_api_auth_v1_user_service_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_api_auth_v1_user_service_proto_goTypes = []any{
-	(*GetUserProfileRequest)(nil),    // 0: auth.v1.GetUserProfileRequest
-	(*UpdateUserProfileRequest)(nil), // 1: auth.v1.UpdateUserProfileRequest
-	(*DeleteUserAccountRequest)(nil), // 2: auth.v1.DeleteUserAccountRequest
-	(*UserProfileResponse)(nil),      // 3: auth.v1.UserProfileResponse
-	(*timestamppb.Timestamp)(nil),    // 4: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),            // 5: google.protobuf.Empty
+	(*GetUserProfileRequest)(nil), // 0: auth.v1.GetUserProfileRequest
+	(*UserProfileResponse)(nil),   // 1: auth.v1.UserProfileResponse
+	(*timestamppb.Timestamp)(nil), // 2: google.protobuf.Timestamp
 }
 var file_api_auth_v1_user_service_proto_depIdxs = []int32{
-	4, // 0: auth.v1.UserProfileResponse.created_at:type_name -> google.protobuf.Timestamp
-	4, // 1: auth.v1.UserProfileResponse.updated_at:type_name -> google.protobuf.Timestamp
-	0, // 2: auth.v1.UserService.GetUserProfile:input_type -> auth.v1.GetUserProfileRequest
-	1, // 3: auth.v1.UserService.UpdateUserProfile:input_type -> auth.v1.UpdateUserProfileRequest
-	2, // 4: auth.v1.UserService.DeleteUserAccount:input_type -> auth.v1.DeleteUserAccountRequest
-	3, // 5: auth.v1.UserService.GetUserProfile:output_type -> auth.v1.UserProfileResponse
-	3, // 6: auth.v1.UserService.UpdateUserProfile:output_type -> auth.v1.UserProfileResponse
-	5, // 7: auth.v1.UserService.DeleteUserAccount:output_type -> google.protobuf.Empty
-	5, // [5:8] is the sub-list for method output_type
-	2, // [2:5] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	2, // 0: auth.v1.UserProfileResponse.created_at:type_name -> google.protobuf.Timestamp
+	0, // 1: auth.v1.UserService.GetUserProfile:input_type -> auth.v1.GetUserProfileRequest
+	1, // 2: auth.v1.UserService.GetUserProfile:output_type -> auth.v1.UserProfileResponse
+	2, // [2:3] is the sub-list for method output_type
+	1, // [1:2] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_api_auth_v1_user_service_proto_init() }
@@ -356,15 +183,13 @@ func file_api_auth_v1_user_service_proto_init() {
 	if File_api_auth_v1_user_service_proto != nil {
 		return
 	}
-	file_api_auth_v1_user_service_proto_msgTypes[1].OneofWrappers = []any{}
-	file_api_auth_v1_user_service_proto_msgTypes[2].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_auth_v1_user_service_proto_rawDesc), len(file_api_auth_v1_user_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

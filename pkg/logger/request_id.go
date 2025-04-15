@@ -6,12 +6,20 @@ import (
 	"go.uber.org/zap"
 )
 
+// contextKey - специальный тип для ключей контекста
+type contextKey string
+
 const (
-	RequestID = "request_id"
+	RequestID               = "request_id"
+	RequestIDKey contextKey = "request_id"
 )
 
+func NewRequestIDContext(ctx context.Context, requestID string) context.Context {
+	return context.WithValue(ctx, RequestIDKey, requestID)
+}
+
 func getRequestID(ctx context.Context) (string, bool) {
-	id, ok := ctx.Value(RequestID).(string)
+	id, ok := ctx.Value(RequestIDKey).(string)
 	return id, ok
 }
 

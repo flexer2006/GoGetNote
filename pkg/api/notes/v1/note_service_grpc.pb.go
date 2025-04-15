@@ -8,7 +8,6 @@ package notesv1
 
 import (
 	context "context"
-	v1 "gitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/common/v1"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -21,35 +20,29 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	NoteService_CreateNote_FullMethodName   = "/notes.v1.NoteService/CreateNote"
-	NoteService_GetNote_FullMethodName      = "/notes.v1.NoteService/GetNote"
-	NoteService_ListNotes_FullMethodName    = "/notes.v1.NoteService/ListNotes"
-	NoteService_UpdateNote_FullMethodName   = "/notes.v1.NoteService/UpdateNote"
-	NoteService_DeleteNote_FullMethodName   = "/notes.v1.NoteService/DeleteNote"
-	NoteService_SearchNotes_FullMethodName  = "/notes.v1.NoteService/SearchNotes"
-	NoteService_GetNoteError_FullMethodName = "/notes.v1.NoteService/GetNoteError"
+	NoteService_CreateNote_FullMethodName = "/notes.v1.NoteService/CreateNote"
+	NoteService_GetNote_FullMethodName    = "/notes.v1.NoteService/GetNote"
+	NoteService_ListNotes_FullMethodName  = "/notes.v1.NoteService/ListNotes"
+	NoteService_UpdateNote_FullMethodName = "/notes.v1.NoteService/UpdateNote"
+	NoteService_DeleteNote_FullMethodName = "/notes.v1.NoteService/DeleteNote"
 )
 
 // NoteServiceClient is the client API for NoteService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// NoteService предоставляет методы для работы с заметками
+// NoteService предоставляет минимальный набор методов для работы с заметками
 type NoteServiceClient interface {
 	// CreateNote создает новую заметку
 	CreateNote(ctx context.Context, in *CreateNoteRequest, opts ...grpc.CallOption) (*NoteResponse, error)
 	// GetNote получает заметку по ID
 	GetNote(ctx context.Context, in *GetNoteRequest, opts ...grpc.CallOption) (*NoteResponse, error)
-	// ListNotes получает список заметок пользователя с возможностью фильтрации и пагинации
+	// ListNotes получает список заметок пользователя с пагинацией
 	ListNotes(ctx context.Context, in *ListNotesRequest, opts ...grpc.CallOption) (*ListNotesResponse, error)
 	// UpdateNote обновляет существующую заметку
 	UpdateNote(ctx context.Context, in *UpdateNoteRequest, opts ...grpc.CallOption) (*NoteResponse, error)
 	// DeleteNote удаляет заметку
 	DeleteNote(ctx context.Context, in *DeleteNoteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// SearchNotes выполняет поиск по заметкам пользователя
-	SearchNotes(ctx context.Context, in *SearchNotesRequest, opts ...grpc.CallOption) (*ListNotesResponse, error)
-	// GetNoteError возвращает стандартизированную ошибку для сервиса заметок
-	GetNoteError(ctx context.Context, in *GetNoteErrorRequest, opts ...grpc.CallOption) (*v1.ErrorResponse, error)
 }
 
 type noteServiceClient struct {
@@ -110,46 +103,22 @@ func (c *noteServiceClient) DeleteNote(ctx context.Context, in *DeleteNoteReques
 	return out, nil
 }
 
-func (c *noteServiceClient) SearchNotes(ctx context.Context, in *SearchNotesRequest, opts ...grpc.CallOption) (*ListNotesResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListNotesResponse)
-	err := c.cc.Invoke(ctx, NoteService_SearchNotes_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *noteServiceClient) GetNoteError(ctx context.Context, in *GetNoteErrorRequest, opts ...grpc.CallOption) (*v1.ErrorResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(v1.ErrorResponse)
-	err := c.cc.Invoke(ctx, NoteService_GetNoteError_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // NoteServiceServer is the server API for NoteService service.
 // All implementations must embed UnimplementedNoteServiceServer
 // for forward compatibility.
 //
-// NoteService предоставляет методы для работы с заметками
+// NoteService предоставляет минимальный набор методов для работы с заметками
 type NoteServiceServer interface {
 	// CreateNote создает новую заметку
 	CreateNote(context.Context, *CreateNoteRequest) (*NoteResponse, error)
 	// GetNote получает заметку по ID
 	GetNote(context.Context, *GetNoteRequest) (*NoteResponse, error)
-	// ListNotes получает список заметок пользователя с возможностью фильтрации и пагинации
+	// ListNotes получает список заметок пользователя с пагинацией
 	ListNotes(context.Context, *ListNotesRequest) (*ListNotesResponse, error)
 	// UpdateNote обновляет существующую заметку
 	UpdateNote(context.Context, *UpdateNoteRequest) (*NoteResponse, error)
 	// DeleteNote удаляет заметку
 	DeleteNote(context.Context, *DeleteNoteRequest) (*emptypb.Empty, error)
-	// SearchNotes выполняет поиск по заметкам пользователя
-	SearchNotes(context.Context, *SearchNotesRequest) (*ListNotesResponse, error)
-	// GetNoteError возвращает стандартизированную ошибку для сервиса заметок
-	GetNoteError(context.Context, *GetNoteErrorRequest) (*v1.ErrorResponse, error)
 	mustEmbedUnimplementedNoteServiceServer()
 }
 
@@ -174,12 +143,6 @@ func (UnimplementedNoteServiceServer) UpdateNote(context.Context, *UpdateNoteReq
 }
 func (UnimplementedNoteServiceServer) DeleteNote(context.Context, *DeleteNoteRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteNote not implemented")
-}
-func (UnimplementedNoteServiceServer) SearchNotes(context.Context, *SearchNotesRequest) (*ListNotesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SearchNotes not implemented")
-}
-func (UnimplementedNoteServiceServer) GetNoteError(context.Context, *GetNoteErrorRequest) (*v1.ErrorResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetNoteError not implemented")
 }
 func (UnimplementedNoteServiceServer) mustEmbedUnimplementedNoteServiceServer() {}
 func (UnimplementedNoteServiceServer) testEmbeddedByValue()                     {}
@@ -292,42 +255,6 @@ func _NoteService_DeleteNote_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _NoteService_SearchNotes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SearchNotesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NoteServiceServer).SearchNotes(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: NoteService_SearchNotes_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NoteServiceServer).SearchNotes(ctx, req.(*SearchNotesRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _NoteService_GetNoteError_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetNoteErrorRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NoteServiceServer).GetNoteError(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: NoteService_GetNoteError_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NoteServiceServer).GetNoteError(ctx, req.(*GetNoteErrorRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // NoteService_ServiceDesc is the grpc.ServiceDesc for NoteService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -354,14 +281,6 @@ var NoteService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteNote",
 			Handler:    _NoteService_DeleteNote_Handler,
-		},
-		{
-			MethodName: "SearchNotes",
-			Handler:    _NoteService_SearchNotes_Handler,
-		},
-		{
-			MethodName: "GetNoteError",
-			Handler:    _NoteService_GetNoteError_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -10,10 +10,25 @@ if (Test-Path -Path $GO_OUT_DIR) {
 New-Item -ItemType Directory -Path $GO_OUT_DIR -Force | Out-Null
 Write-Host "Создана директория $GO_OUT_DIR" -ForegroundColor Green
 
+# Отладочная информация
+Write-Host "Текущая директория: $(Get-Location)" -ForegroundColor Cyan
+Write-Host "Ищем в директории: $PROTO_DIR" -ForegroundColor Cyan
+$allFiles = Get-ChildItem -Path $PROTO_DIR -Recurse
+Write-Host "Всего файлов в директории: $($allFiles.Count)" -ForegroundColor Cyan
+
+# Исправленный поиск файлов - работает в Windows
 $protoFiles = Get-ChildItem -Path $PROTO_DIR -Filter "*.proto" -Recurse | 
-    Where-Object { $_.FullName -notlike "*api/google/*" }
+    Where-Object { 
+        $_.FullName -match "api\\auth" -or 
+        $_.FullName -match "api\\notes" -or
+        $_.FullName -match "api\\common"
+    }
 
 Write-Host "Найдено $($protoFiles.Count) proto файлов для обработки" -ForegroundColor Cyan
+foreach ($file in $protoFiles) {
+    Write-Host "  - $($file.FullName)" -ForegroundColor Gray
+}
+
 $processedCount = 0
 
 foreach ($protoFile in $protoFiles) {
@@ -25,9 +40,17 @@ foreach ($protoFile in $protoFiles) {
            "--go_opt=module=$MODULE_PATH/$GO_OUT_DIR " +
            "--go-grpc_out=$GO_OUT_DIR " +
            "--go-grpc_opt=module=$MODULE_PATH/$GO_OUT_DIR " +
+           "--grpc-gateway_out=$GO_OUT_DIR " +
+           "--grpc-gateway_opt=module=$MODULE_PATH/$GO_OUT_DIR " +
+           "--grpc-gateway_opt=logtostderr=true " +
            "-I. " +
+           # Добавляем пути к Google API и protoc 
+           "-I$env:GOPATH/pkg/mod/github.com/googleapis/googleapis " +
+           "-I$env:GOPATH/pkg/mod " +
+           "-I$env:GOPATH/src " +
            "$relativePath"
     
+    Write-Host "Выполняем: $cmd" -ForegroundColor Gray
     $output = Invoke-Expression $cmd 2>&1
     
     if ($LASTEXITCODE -ne 0) {

@@ -14,135 +14,13 @@ message ErrorResponse {
   
   // Человекочитаемое сообщение об ошибке
   string message = 3;
-  
-  // Список подробных ошибок (используется для валидации форм)
-  repeated ValidationError validation_errors = 4;
-  
-  // Уникальный идентификатор ошибки для логирования
-  string error_id = 5;
-  
-  // Дополнительные данные для отладки (только в dev-окружении)
-  map<string, string> metadata = 6;
 }
 
 // ValidationError представляет ошибку валидации конкретного поля
 message ValidationError {
-  // Имя поля с ошибкой (поддерживает вложенные поля через точку, например "user.email")
+  // Имя поля с ошибкой
   string field = 1;
   
-  // Код ошибки для программной обработки
-  string code = 2;
-  
-  // Человекочитаемое сообщение об ошибке
-  string message = 3;
-}
-
-// ErrorCode определяет стандартные коды ошибок в системе
-enum ErrorCode {
-  // Неизвестная ошибка (значение по умолчанию)
-  ERROR_CODE_UNSPECIFIED = 0;
-  
-  // Общие ошибки
-  ERROR_CODE_BAD_REQUEST = 10;           // 400 Bad Request
-  ERROR_CODE_UNAUTHORIZED = 20;          // 401 Unauthorized
-  ERROR_CODE_FORBIDDEN = 30;             // 403 Forbidden
-  ERROR_CODE_NOT_FOUND = 40;             // 404 Not Found
-  ERROR_CODE_CONFLICT = 50;              // 409 Conflict
-  ERROR_CODE_VALIDATION_FAILED = 60;     // 422 Unprocessable Entity
-  ERROR_CODE_RATE_LIMITED = 70;          // 429 Too Many Requests
-  ERROR_CODE_INTERNAL = 80;              // 500 Internal Server Error
-  
-  // Ошибки аутентификации
-  ERROR_CODE_INVALID_CREDENTIALS = 201;  // Неверный логин или пароль
-  ERROR_CODE_TOKEN_EXPIRED = 202;        // Токен истек
-  ERROR_CODE_INVALID_TOKEN = 203;        // Недействительный токен
-  ERROR_CODE_SESSION_EXPIRED = 204;      // Сессия истекла
-  
-  // Ошибки пользователей
-  ERROR_CODE_USER_ALREADY_EXISTS = 301;  // Пользователь уже существует
-  ERROR_CODE_USER_NOT_FOUND = 302;       // Пользователь не найден
-  ERROR_CODE_INVALID_PASSWORD = 303;     // Недействительный пароль
-  
-  // Ошибки заметок
-  ERROR_CODE_NOTE_NOT_FOUND = 401;       // Заметка не найдена
-  ERROR_CODE_BOX_NOT_FOUND = 402;        // Бокс не найден
-  ERROR_CODE_ACCESS_DENIED = 403;        // Отказано в доступе к заметке/боксу
-  ERROR_CODE_NOTE_ALREADY_EXISTS = 404;  // Заметка уже существует
-  
-  // Ошибки совместного доступа
-  ERROR_CODE_INVALID_ACCESS_LEVEL = 501; // Недопустимый уровень доступа
-  ERROR_CODE_CANNOT_SHARE_WITH_SELF = 502;// Нельзя дать доступ самому себе
-  ERROR_CODE_ACCESS_ALREADY_GRANTED = 503;// Доступ уже предоставлен
-  
-  // Системные ошибки
-  ERROR_CODE_DATABASE_ERROR = 901;       // Ошибка базы данных
-  ERROR_CODE_CACHE_ERROR = 902;          // Ошибка кэша
-  ERROR_CODE_NETWORK_ERROR = 903;        // Сетевая ошибка
-  ERROR_CODE_SERVICE_UNAVAILABLE = 904;  // Сервис недоступен
-  ERROR_CODE_TIMEOUT = 905;              // Таймаут операции
-}
-
-// Тип локализованного сообщения об ошибке
-message LocalizedMessage {
-  // Код языка (например, "ru", "en")
-  string language_code = 1;
-  
-  // Локализованное сообщение
+  // Сообщение об ошибке
   string message = 2;
-}
-
-// Расширенная информация об ошибке с поддержкой локализации
-message DetailedError {
-  // Код ошибки
-  ErrorCode code = 1;
-  
-  // Сообщение об ошибке по умолчанию (обычно на английском)
-  string default_message = 2;
-  
-  // Локализованные сообщения
-  repeated LocalizedMessage localized_messages = 3;
-  
-  // Техническая информация об ошибке (для отладки)
-  string technical_message = 4;
-  
-  // Ссылка на документацию по ошибке
-  string documentation_url = 5;
-}
-
-// ErrorService определяет методы для получения информации об ошибках
-// Это сервис, который может использоваться клиентами для получения
-// подробной информации об ошибках по их кодам
-service ErrorService {
-  // GetErrorInfo возвращает информацию об ошибке по ее коду
-  rpc GetErrorInfo(GetErrorInfoRequest) returns (GetErrorInfoResponse);
-  
-  // ListErrorCodes возвращает список всех возможных кодов ошибок
-  rpc ListErrorCodes(ListErrorCodesRequest) returns (ListErrorCodesResponse);
-}
-
-// Запрос на получение информации об ошибке
-message GetErrorInfoRequest {
-  // Код ошибки
-  ErrorCode code = 1;
-  
-  // Предпочитаемый язык для сообщения об ошибке (опционально)
-  optional string language_code = 2;
-}
-
-// Ответ с информацией об ошибке
-message GetErrorInfoResponse {
-  // Подробная информация об ошибке
-  DetailedError error = 1;
-}
-
-// Запрос на получение списка кодов ошибок
-message ListErrorCodesRequest {
-  // Фильтр по категории ошибок (опционально)
-  optional string category = 1;
-}
-
-// Ответ со списком кодов ошибок
-message ListErrorCodesResponse {
-  // Список ошибок с подробной информацией
-  repeated DetailedError errors = 1;
 }

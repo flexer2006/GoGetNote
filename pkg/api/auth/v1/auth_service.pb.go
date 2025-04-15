@@ -7,7 +7,6 @@
 package authv1
 
 import (
-	v1 "gitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/common/v1"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -25,19 +24,17 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Запрос на регистрацию нового пользователя
+// Запрос на регистрацию
 type RegisterRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Email пользователя (уникальный идентификатор)
+	// Email пользователя
 	Email string `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
 	// Имя пользователя
 	Username string `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
-	// Пароль пользователя
-	Password string `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
-	// Подтверждение пароля
-	PasswordConfirmation string `protobuf:"bytes,4,opt,name=password_confirmation,json=passwordConfirmation,proto3" json:"password_confirmation,omitempty"`
-	unknownFields        protoimpl.UnknownFields
-	sizeCache            protoimpl.SizeCache
+	// Пароль
+	Password      string `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *RegisterRequest) Reset() {
@@ -91,28 +88,19 @@ func (x *RegisterRequest) GetPassword() string {
 	return ""
 }
 
-func (x *RegisterRequest) GetPasswordConfirmation() string {
-	if x != nil {
-		return x.PasswordConfirmation
-	}
-	return ""
-}
-
-// Ответ на регистрацию пользователя
+// Ответ на регистрацию
 type RegisterResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Уникальный идентификатор пользователя
+	// ID пользователя
 	UserId string `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	// Access token для API-запросов
+	// Токен доступа
 	AccessToken string `protobuf:"bytes,2,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
-	// Refresh token для обновления access token
+	// Токен для обновления
 	RefreshToken string `protobuf:"bytes,3,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
-	// Срок действия access token
-	AccessTokenExpiresAt *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=access_token_expires_at,json=accessTokenExpiresAt,proto3" json:"access_token_expires_at,omitempty"`
-	// Срок действия refresh token
-	RefreshTokenExpiresAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=refresh_token_expires_at,json=refreshTokenExpiresAt,proto3" json:"refresh_token_expires_at,omitempty"`
-	unknownFields         protoimpl.UnknownFields
-	sizeCache             protoimpl.SizeCache
+	// Срок действия токена
+	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *RegisterResponse) Reset() {
@@ -166,26 +154,19 @@ func (x *RegisterResponse) GetRefreshToken() string {
 	return ""
 }
 
-func (x *RegisterResponse) GetAccessTokenExpiresAt() *timestamppb.Timestamp {
+func (x *RegisterResponse) GetExpiresAt() *timestamppb.Timestamp {
 	if x != nil {
-		return x.AccessTokenExpiresAt
+		return x.ExpiresAt
 	}
 	return nil
 }
 
-func (x *RegisterResponse) GetRefreshTokenExpiresAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.RefreshTokenExpiresAt
-	}
-	return nil
-}
-
-// Запрос на аутентификацию пользователя
+// Запрос на вход
 type LoginRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Email пользователя
+	// Email
 	Email string `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
-	// Пароль пользователя
+	// Пароль
 	Password      string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -235,23 +216,21 @@ func (x *LoginRequest) GetPassword() string {
 	return ""
 }
 
-// Ответ на успешную аутентификацию
+// Ответ на вход
 type LoginResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Уникальный идентификатор пользователя
+	// ID пользователя
 	UserId string `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	// Имя пользователя
 	Username string `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
-	// Access token для API-запросов
+	// Токен доступа
 	AccessToken string `protobuf:"bytes,3,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
-	// Refresh token для обновления access token
+	// Токен для обновления
 	RefreshToken string `protobuf:"bytes,4,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
-	// Срок действия access token
-	AccessTokenExpiresAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=access_token_expires_at,json=accessTokenExpiresAt,proto3" json:"access_token_expires_at,omitempty"`
-	// Срок действия refresh token
-	RefreshTokenExpiresAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=refresh_token_expires_at,json=refreshTokenExpiresAt,proto3" json:"refresh_token_expires_at,omitempty"`
-	unknownFields         protoimpl.UnknownFields
-	sizeCache             protoimpl.SizeCache
+	// Срок действия токена
+	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *LoginResponse) Reset() {
@@ -312,24 +291,17 @@ func (x *LoginResponse) GetRefreshToken() string {
 	return ""
 }
 
-func (x *LoginResponse) GetAccessTokenExpiresAt() *timestamppb.Timestamp {
+func (x *LoginResponse) GetExpiresAt() *timestamppb.Timestamp {
 	if x != nil {
-		return x.AccessTokenExpiresAt
+		return x.ExpiresAt
 	}
 	return nil
 }
 
-func (x *LoginResponse) GetRefreshTokenExpiresAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.RefreshTokenExpiresAt
-	}
-	return nil
-}
-
-// Запрос на обновление токенов
+// Запрос на обновление токена
 type RefreshTokensRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Refresh token, полученный при авторизации
+	// Токен для обновления
 	RefreshToken  string `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -372,19 +344,17 @@ func (x *RefreshTokensRequest) GetRefreshToken() string {
 	return ""
 }
 
-// Ответ с новыми токенами
+// Ответ на обновление токена
 type RefreshTokensResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Новый access token
+	// Новый токен доступа
 	AccessToken string `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
-	// Новый refresh token
+	// Новый токен для обновления
 	RefreshToken string `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
-	// Срок действия нового access token
-	AccessTokenExpiresAt *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=access_token_expires_at,json=accessTokenExpiresAt,proto3" json:"access_token_expires_at,omitempty"`
-	// Срок действия нового refresh token
-	RefreshTokenExpiresAt *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=refresh_token_expires_at,json=refreshTokenExpiresAt,proto3" json:"refresh_token_expires_at,omitempty"`
-	unknownFields         protoimpl.UnknownFields
-	sizeCache             protoimpl.SizeCache
+	// Срок действия токена
+	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *RefreshTokensResponse) Reset() {
@@ -431,24 +401,17 @@ func (x *RefreshTokensResponse) GetRefreshToken() string {
 	return ""
 }
 
-func (x *RefreshTokensResponse) GetAccessTokenExpiresAt() *timestamppb.Timestamp {
+func (x *RefreshTokensResponse) GetExpiresAt() *timestamppb.Timestamp {
 	if x != nil {
-		return x.AccessTokenExpiresAt
+		return x.ExpiresAt
 	}
 	return nil
 }
 
-func (x *RefreshTokensResponse) GetRefreshTokenExpiresAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.RefreshTokenExpiresAt
-	}
-	return nil
-}
-
-// Запрос на выход из системы (завершение сессии)
+// Запрос на выход
 type LogoutRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Refresh token, который нужно инвалидировать
+	// Токен для обновления, который нужно инвалидировать
 	RefreshToken  string `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -491,227 +454,45 @@ func (x *LogoutRequest) GetRefreshToken() string {
 	return ""
 }
 
-// Запрос на валидацию токена (внутренний метод)
-type ValidateTokenRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Access token, который нужно проверить
-	AccessToken   string `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ValidateTokenRequest) Reset() {
-	*x = ValidateTokenRequest{}
-	mi := &file_api_auth_v1_auth_service_proto_msgTypes[7]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ValidateTokenRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ValidateTokenRequest) ProtoMessage() {}
-
-func (x *ValidateTokenRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_auth_v1_auth_service_proto_msgTypes[7]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ValidateTokenRequest.ProtoReflect.Descriptor instead.
-func (*ValidateTokenRequest) Descriptor() ([]byte, []int) {
-	return file_api_auth_v1_auth_service_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *ValidateTokenRequest) GetAccessToken() string {
-	if x != nil {
-		return x.AccessToken
-	}
-	return ""
-}
-
-// Ответ на валидацию токена
-type ValidateTokenResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Валиден ли токен
-	IsValid bool `protobuf:"varint,1,opt,name=is_valid,json=isValid,proto3" json:"is_valid,omitempty"`
-	// ID пользователя, которому принадлежит токен
-	UserId string `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	// Время окончания действия токена
-	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ValidateTokenResponse) Reset() {
-	*x = ValidateTokenResponse{}
-	mi := &file_api_auth_v1_auth_service_proto_msgTypes[8]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ValidateTokenResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ValidateTokenResponse) ProtoMessage() {}
-
-func (x *ValidateTokenResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_auth_v1_auth_service_proto_msgTypes[8]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ValidateTokenResponse.ProtoReflect.Descriptor instead.
-func (*ValidateTokenResponse) Descriptor() ([]byte, []int) {
-	return file_api_auth_v1_auth_service_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *ValidateTokenResponse) GetIsValid() bool {
-	if x != nil {
-		return x.IsValid
-	}
-	return false
-}
-
-func (x *ValidateTokenResponse) GetUserId() string {
-	if x != nil {
-		return x.UserId
-	}
-	return ""
-}
-
-func (x *ValidateTokenResponse) GetExpiresAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.ExpiresAt
-	}
-	return nil
-}
-
-// Запрос на получение ошибки аутентификации
-type GetAuthErrorRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Код ошибки
-	ErrorCode v1.ErrorCode `protobuf:"varint,1,opt,name=error_code,json=errorCode,proto3,enum=common.v1.ErrorCode" json:"error_code,omitempty"`
-	// Дополнительные параметры для форматирования сообщения об ошибке
-	Params        map[string]string `protobuf:"bytes,2,rep,name=params,proto3" json:"params,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetAuthErrorRequest) Reset() {
-	*x = GetAuthErrorRequest{}
-	mi := &file_api_auth_v1_auth_service_proto_msgTypes[9]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetAuthErrorRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetAuthErrorRequest) ProtoMessage() {}
-
-func (x *GetAuthErrorRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_auth_v1_auth_service_proto_msgTypes[9]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetAuthErrorRequest.ProtoReflect.Descriptor instead.
-func (*GetAuthErrorRequest) Descriptor() ([]byte, []int) {
-	return file_api_auth_v1_auth_service_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *GetAuthErrorRequest) GetErrorCode() v1.ErrorCode {
-	if x != nil {
-		return x.ErrorCode
-	}
-	return v1.ErrorCode(0)
-}
-
-func (x *GetAuthErrorRequest) GetParams() map[string]string {
-	if x != nil {
-		return x.Params
-	}
-	return nil
-}
-
 var File_api_auth_v1_auth_service_proto protoreflect.FileDescriptor
 
 const file_api_auth_v1_auth_service_proto_rawDesc = "" +
 	"\n" +
-	"\x1eapi/auth/v1/auth_service.proto\x12\aauth.v1\x1a api/google/api/annotations.proto\x1a#api/google/protobuf/timestamp.proto\x1a\x1fapi/google/protobuf/empty.proto\x1a\x1aapi/common/v1/errors.proto\"\x94\x01\n" +
+	"\x1eapi/auth/v1/auth_service.proto\x12\aauth.v1\x1a#api/google/protobuf/timestamp.proto\x1a\x1fapi/google/protobuf/empty.proto\x1a api/google/api/annotations.proto\"_\n" +
 	"\x0fRegisterRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x1a\n" +
-	"\bpassword\x18\x03 \x01(\tR\bpassword\x123\n" +
-	"\x15password_confirmation\x18\x04 \x01(\tR\x14passwordConfirmation\"\x9b\x02\n" +
+	"\bpassword\x18\x03 \x01(\tR\bpassword\"\xae\x01\n" +
 	"\x10RegisterResponse\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12!\n" +
 	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\x12#\n" +
-	"\rrefresh_token\x18\x03 \x01(\tR\frefreshToken\x12Q\n" +
-	"\x17access_token_expires_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\x14accessTokenExpiresAt\x12S\n" +
-	"\x18refresh_token_expires_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x15refreshTokenExpiresAt\"@\n" +
+	"\rrefresh_token\x18\x03 \x01(\tR\frefreshToken\x129\n" +
+	"\n" +
+	"expires_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"@\n" +
 	"\fLoginRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
-	"\bpassword\x18\x02 \x01(\tR\bpassword\"\xb4\x02\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword\"\xc7\x01\n" +
 	"\rLoginResponse\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12!\n" +
 	"\faccess_token\x18\x03 \x01(\tR\vaccessToken\x12#\n" +
-	"\rrefresh_token\x18\x04 \x01(\tR\frefreshToken\x12Q\n" +
-	"\x17access_token_expires_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x14accessTokenExpiresAt\x12S\n" +
-	"\x18refresh_token_expires_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\x15refreshTokenExpiresAt\";\n" +
+	"\rrefresh_token\x18\x04 \x01(\tR\frefreshToken\x129\n" +
+	"\n" +
+	"expires_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\";\n" +
 	"\x14RefreshTokensRequest\x12#\n" +
-	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"\x87\x02\n" +
+	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"\x9a\x01\n" +
 	"\x15RefreshTokensResponse\x12!\n" +
 	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12#\n" +
-	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x12Q\n" +
-	"\x17access_token_expires_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x14accessTokenExpiresAt\x12S\n" +
-	"\x18refresh_token_expires_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\x15refreshTokenExpiresAt\"4\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x129\n" +
+	"\n" +
+	"expires_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"4\n" +
 	"\rLogoutRequest\x12#\n" +
-	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"9\n" +
-	"\x14ValidateTokenRequest\x12!\n" +
-	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\"\x86\x01\n" +
-	"\x15ValidateTokenResponse\x12\x19\n" +
-	"\bis_valid\x18\x01 \x01(\bR\aisValid\x12\x17\n" +
-	"\auser_id\x18\x02 \x01(\tR\x06userId\x129\n" +
-	"\n" +
-	"expires_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"\xc7\x01\n" +
-	"\x13GetAuthErrorRequest\x123\n" +
-	"\n" +
-	"error_code\x18\x01 \x01(\x0e2\x14.common.v1.ErrorCodeR\terrorCode\x12@\n" +
-	"\x06params\x18\x02 \x03(\v2(.auth.v1.GetAuthErrorRequest.ParamsEntryR\x06params\x1a9\n" +
-	"\vParamsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x012\x9e\x04\n" +
-	"\vAuthService\x12]\n" +
-	"\bRegister\x12\x18.auth.v1.RegisterRequest\x1a\x19.auth.v1.RegisterResponse\"\x1c\x82\xd3\xe4\x93\x02\x16:\x01*\"\x11/v1/auth/register\x12Q\n" +
-	"\x05Login\x12\x15.auth.v1.LoginRequest\x1a\x16.auth.v1.LoginResponse\"\x19\x82\xd3\xe4\x93\x02\x13:\x01*\"\x0e/v1/auth/login\x12k\n" +
-	"\rRefreshTokens\x12\x1d.auth.v1.RefreshTokensRequest\x1a\x1e.auth.v1.RefreshTokensResponse\"\x1b\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/v1/auth/refresh\x12T\n" +
-	"\x06Logout\x12\x16.auth.v1.LogoutRequest\x1a\x16.google.protobuf.Empty\"\x1a\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/v1/auth/logout\x12P\n" +
-	"\rValidateToken\x12\x1d.auth.v1.ValidateTokenRequest\x1a\x1e.auth.v1.ValidateTokenResponse\"\x00\x12H\n" +
-	"\fGetAuthError\x12\x1c.auth.v1.GetAuthErrorRequest\x1a\x18.common.v1.ErrorResponse\"\x00BZZXgitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/auth/v1;authv1b\x06proto3"
+	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken2\x92\x03\n" +
+	"\vAuthService\x12a\n" +
+	"\bRegister\x12\x18.auth.v1.RegisterRequest\x1a\x19.auth.v1.RegisterResponse\" \x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/api/v1/auth/register\x12U\n" +
+	"\x05Login\x12\x15.auth.v1.LoginRequest\x1a\x16.auth.v1.LoginResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/api/v1/auth/login\x12o\n" +
+	"\rRefreshTokens\x12\x1d.auth.v1.RefreshTokensRequest\x1a\x1e.auth.v1.RefreshTokensResponse\"\x1f\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/api/v1/auth/refresh\x12X\n" +
+	"\x06Logout\x12\x16.auth.v1.LogoutRequest\x1a\x16.google.protobuf.Empty\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/api/v1/auth/logoutBZZXgitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/auth/v1;authv1b\x06proto3"
 
 var (
 	file_api_auth_v1_auth_service_proto_rawDescOnce sync.Once
@@ -725,7 +506,7 @@ func file_api_auth_v1_auth_service_proto_rawDescGZIP() []byte {
 	return file_api_auth_v1_auth_service_proto_rawDescData
 }
 
-var file_api_auth_v1_auth_service_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_api_auth_v1_auth_service_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_api_auth_v1_auth_service_proto_goTypes = []any{
 	(*RegisterRequest)(nil),       // 0: auth.v1.RegisterRequest
 	(*RegisterResponse)(nil),      // 1: auth.v1.RegisterResponse
@@ -734,42 +515,26 @@ var file_api_auth_v1_auth_service_proto_goTypes = []any{
 	(*RefreshTokensRequest)(nil),  // 4: auth.v1.RefreshTokensRequest
 	(*RefreshTokensResponse)(nil), // 5: auth.v1.RefreshTokensResponse
 	(*LogoutRequest)(nil),         // 6: auth.v1.LogoutRequest
-	(*ValidateTokenRequest)(nil),  // 7: auth.v1.ValidateTokenRequest
-	(*ValidateTokenResponse)(nil), // 8: auth.v1.ValidateTokenResponse
-	(*GetAuthErrorRequest)(nil),   // 9: auth.v1.GetAuthErrorRequest
-	nil,                           // 10: auth.v1.GetAuthErrorRequest.ParamsEntry
-	(*timestamppb.Timestamp)(nil), // 11: google.protobuf.Timestamp
-	(v1.ErrorCode)(0),             // 12: common.v1.ErrorCode
-	(*emptypb.Empty)(nil),         // 13: google.protobuf.Empty
-	(*v1.ErrorResponse)(nil),      // 14: common.v1.ErrorResponse
+	(*timestamppb.Timestamp)(nil), // 7: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),         // 8: google.protobuf.Empty
 }
 var file_api_auth_v1_auth_service_proto_depIdxs = []int32{
-	11, // 0: auth.v1.RegisterResponse.access_token_expires_at:type_name -> google.protobuf.Timestamp
-	11, // 1: auth.v1.RegisterResponse.refresh_token_expires_at:type_name -> google.protobuf.Timestamp
-	11, // 2: auth.v1.LoginResponse.access_token_expires_at:type_name -> google.protobuf.Timestamp
-	11, // 3: auth.v1.LoginResponse.refresh_token_expires_at:type_name -> google.protobuf.Timestamp
-	11, // 4: auth.v1.RefreshTokensResponse.access_token_expires_at:type_name -> google.protobuf.Timestamp
-	11, // 5: auth.v1.RefreshTokensResponse.refresh_token_expires_at:type_name -> google.protobuf.Timestamp
-	11, // 6: auth.v1.ValidateTokenResponse.expires_at:type_name -> google.protobuf.Timestamp
-	12, // 7: auth.v1.GetAuthErrorRequest.error_code:type_name -> common.v1.ErrorCode
-	10, // 8: auth.v1.GetAuthErrorRequest.params:type_name -> auth.v1.GetAuthErrorRequest.ParamsEntry
-	0,  // 9: auth.v1.AuthService.Register:input_type -> auth.v1.RegisterRequest
-	2,  // 10: auth.v1.AuthService.Login:input_type -> auth.v1.LoginRequest
-	4,  // 11: auth.v1.AuthService.RefreshTokens:input_type -> auth.v1.RefreshTokensRequest
-	6,  // 12: auth.v1.AuthService.Logout:input_type -> auth.v1.LogoutRequest
-	7,  // 13: auth.v1.AuthService.ValidateToken:input_type -> auth.v1.ValidateTokenRequest
-	9,  // 14: auth.v1.AuthService.GetAuthError:input_type -> auth.v1.GetAuthErrorRequest
-	1,  // 15: auth.v1.AuthService.Register:output_type -> auth.v1.RegisterResponse
-	3,  // 16: auth.v1.AuthService.Login:output_type -> auth.v1.LoginResponse
-	5,  // 17: auth.v1.AuthService.RefreshTokens:output_type -> auth.v1.RefreshTokensResponse
-	13, // 18: auth.v1.AuthService.Logout:output_type -> google.protobuf.Empty
-	8,  // 19: auth.v1.AuthService.ValidateToken:output_type -> auth.v1.ValidateTokenResponse
-	14, // 20: auth.v1.AuthService.GetAuthError:output_type -> common.v1.ErrorResponse
-	15, // [15:21] is the sub-list for method output_type
-	9,  // [9:15] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	7, // 0: auth.v1.RegisterResponse.expires_at:type_name -> google.protobuf.Timestamp
+	7, // 1: auth.v1.LoginResponse.expires_at:type_name -> google.protobuf.Timestamp
+	7, // 2: auth.v1.RefreshTokensResponse.expires_at:type_name -> google.protobuf.Timestamp
+	0, // 3: auth.v1.AuthService.Register:input_type -> auth.v1.RegisterRequest
+	2, // 4: auth.v1.AuthService.Login:input_type -> auth.v1.LoginRequest
+	4, // 5: auth.v1.AuthService.RefreshTokens:input_type -> auth.v1.RefreshTokensRequest
+	6, // 6: auth.v1.AuthService.Logout:input_type -> auth.v1.LogoutRequest
+	1, // 7: auth.v1.AuthService.Register:output_type -> auth.v1.RegisterResponse
+	3, // 8: auth.v1.AuthService.Login:output_type -> auth.v1.LoginResponse
+	5, // 9: auth.v1.AuthService.RefreshTokens:output_type -> auth.v1.RefreshTokensResponse
+	8, // 10: auth.v1.AuthService.Logout:output_type -> google.protobuf.Empty
+	7, // [7:11] is the sub-list for method output_type
+	3, // [3:7] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_api_auth_v1_auth_service_proto_init() }
@@ -783,7 +548,7 @@ func file_api_auth_v1_auth_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_auth_v1_auth_service_proto_rawDesc), len(file_api_auth_v1_auth_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
