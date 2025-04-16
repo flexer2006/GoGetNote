@@ -3,7 +3,7 @@ package notes
 import "errors"
 
 type NoteService interface {
-	CreateNote(title, content string, userID uint) (*Note, error)
+	CreateNote(title, content string, userID string) (*Note, error)
 	GetNoteByID(id string) (*Note, error)
 	ListNotes() ([]Note, error)
 	UpdateNote(id string, title, content string) (*Note, error)
@@ -20,14 +20,14 @@ func NewNoteService(noteRespository NoteRepository) NoteService {
 	}
 }
 
-func (s *noteService) CreateNote(title, content string, userID uint) (*Note, error) {
+func (s *noteService) CreateNote(title, content string, userID string) (*Note, error) {
 	if title == "" || content == "" {
 		return nil, errors.New("title and content cannot be empty")
 	}
 	note := &Note{
 		Title:   title,
 		Content: content,
-		UserID:  string(userID),
+		UserID:  userID,
 	}
 	createdNote, err := s.noteRespository.Create(note)
 	if err != nil {

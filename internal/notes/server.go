@@ -3,7 +3,6 @@ package notes
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	notesv1 "gitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/notes/v1"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -35,7 +34,7 @@ func (s *noteGRPCServer) CreateNote(ctx context.Context, req *notesv1.CreateNote
 	}
 
 	// Вызываем метод сервиса
-	note, err := s.noteService.CreateNote(title, content, 1)
+	note, err := s.noteService.CreateNote(title, content, "someuser")
 	if err != nil {
 		return nil, err
 	}
@@ -93,10 +92,10 @@ func (s *noteGRPCServer) ListNotes(ctx context.Context, req *notesv1.ListNotesRe
 // UpdateNote обновляет существующую заметку
 func (s *noteGRPCServer) UpdateNote(ctx context.Context, req *notesv1.UpdateNoteRequest) (*notesv1.NoteResponse, error) {
 	// Преобразуем NoteId в uint
-	noteId, err := strconv.ParseUint(req.NoteId, 10, 64)
-	if err != nil {
-		return nil, fmt.Errorf("invalid note_id: %v", err)
-	}
+	// noteId, err := strconv.ParseUint(req.NoteId, 10, 64)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("invalid note_id: %v", err)
+	// }
 
 	// Преобразуем Title и Content, если они nil
 	title := req.Title
@@ -110,7 +109,7 @@ func (s *noteGRPCServer) UpdateNote(ctx context.Context, req *notesv1.UpdateNote
 	}
 
 	// Обновляем заметку
-	note, err := s.noteService.UpdateNote(fmt.Sprint(noteId), *title, *content)
+	note, err := s.noteService.UpdateNote(fmt.Sprint(req.NoteId), *title, *content)
 	if err != nil {
 		return nil, err
 	}

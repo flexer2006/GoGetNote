@@ -1,6 +1,9 @@
 package notes
 
 import (
+	"fmt"
+	"time"
+
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -8,7 +11,7 @@ import (
 type NoteRepository interface {
 	Create(note *Note) (*Note, error)
 	GetByID(id string) (*Note, error)
-	GetAll() []Note	
+	GetAll() []Note
 	Update(note *Note) (*Note, error)
 	Delete(id string) error
 }
@@ -24,6 +27,7 @@ func NewNoteRepository(db *gorm.DB) NoteRepository {
 }
 
 func (repo *noteRepository) Create(note *Note) (*Note, error) {
+	note.NoteID = fmt.Sprintf("NOTE%03d", time.Now().UnixNano())
 	if err := repo.db.Table("notes").Create(note).Error; err != nil {
 		return nil, err
 	}
@@ -32,7 +36,7 @@ func (repo *noteRepository) Create(note *Note) (*Note, error) {
 
 func (repo *noteRepository) GetByID(id string) (*Note, error) {
 	var note Note
-	if err := repo.db.Table("notes").Where("id = ?", id).First(&note).Error; err != nil {
+	if err := repo.db.Table("notes").Where("note_id = ?", id).First(&note).Error; err != nil {
 		return nil, err
 	}
 	return &note, nil
@@ -45,8 +49,7 @@ func (repo *noteRepository) GetAll() []Note {
 	// }
 	repo.db.
 		Table("notes").
-		Where("deleted_at is null").
-		Order("id asc").
+		Order("note_id asc").
 		Scan(&notes)
 	return notes
 }
@@ -60,9 +63,8 @@ func (repo *noteRepository) Update(note *Note) (*Note, error) {
 }
 
 func (repo *noteRepository) Delete(id string) error {
-	result := repo.db.Delete(&Note{}, id)
-	if result.Error != nil {
-		return result.Error
+	if err := repo.db.Where("note_id = ?", id).Delete(&Note{}).Error; err != nil {
+		return err
 	}
 	return nil
 }
