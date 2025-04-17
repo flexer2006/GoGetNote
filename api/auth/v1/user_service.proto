@@ -3,23 +3,21 @@ syntax = "proto3";
 package auth.v1;
 
 import "api/google/protobuf/timestamp.proto";
-import "api/google/api/annotations.proto"; // Добавлен импорт для HTTP аннотаций
+import "api/google/protobuf/empty.proto";
+import "api/google/api/annotations.proto";
 
 option go_package = "gitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/auth/v1;authv1";
 
 // UserService предоставляет методы для работы с профилем пользователя
 service UserService {
   // Получение профиля текущего пользователя
-  rpc GetUserProfile(GetUserProfileRequest) returns (UserProfileResponse) {
+  // Идентификация происходит через токен
+  rpc GetUserProfile(google.protobuf.Empty) returns (UserProfileResponse) {
     option (google.api.http) = {
       get: "/api/v1/users/me"
     };
   }
 }
-
-// Пустой запрос для получения профиля
-// Идентификация происходит через токен
-message GetUserProfileRequest {}
 
 // Ответ с информацией о пользователе
 message UserProfileResponse {

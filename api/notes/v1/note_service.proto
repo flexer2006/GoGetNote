@@ -4,8 +4,7 @@ package notes.v1;
 
 import "api/google/protobuf/timestamp.proto";
 import "api/google/protobuf/empty.proto";
-import "api/common/v1/pagination.proto";
-import "api/google/api/annotations.proto"; // Добавлен импорт для HTTP аннотаций
+import "api/google/api/annotations.proto";
 
 option go_package = "gitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/notes/v1;notesv1";
 
@@ -66,8 +65,11 @@ message GetNoteRequest {
 
 // Запрос на получение списка заметок
 message ListNotesRequest {
-  // Параметры пагинации
-  common.v1.PaginationRequest pagination = 1;
+  // Максимальное количество элементов
+  int32 limit = 1;
+  
+  // Смещение для пагинации
+  int32 offset = 2;
 }
 
 // Ответ со списком заметок
@@ -75,8 +77,14 @@ message ListNotesResponse {
   // Список заметок
   repeated Note notes = 1;
   
-  // Метаданные пагинации
-  common.v1.PaginationResponse pagination = 2;
+  // Общее количество доступных элементов
+  int32 total_count = 2;
+  
+  // Смещение, использованное в запросе
+  int32 offset = 3;
+  
+  // Размер страницы, использованный в запросе
+  int32 limit = 4;
 }
 
 // Запрос на обновление заметки

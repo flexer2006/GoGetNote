@@ -15,12 +15,3 @@ message ErrorResponse {
   // Человекочитаемое сообщение об ошибке
   string message = 3;
 }
-
-// ValidationError представляет ошибку валидации конкретного поля
-message ValidationError {
-  // Имя поля с ошибкой
-  string field = 1;
-  
-  // Сообщение об ошибке
-  string message = 2;
-}

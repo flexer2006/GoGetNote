@@ -4,9 +4,19 @@ vars:
   PROTO_DIR: api
   GO_OUT_DIR: pkg/api
 
-tasks:
-  proto:clean:
-    desc: Очищает сгенерированные файлы
+  proto:clean:linux:
+    desc: Очищает сгенерированные файлы (Linux)
+    cmds:
+      - |
+        if [ -d "{{.GO_OUT_DIR}}" ]; then
+          rm -rf "{{.GO_OUT_DIR}}"
+          echo "Директория {{.GO_OUT_DIR}} очищена"
+        else
+          echo "Директория {{.GO_OUT_DIR}} не существует"
+        fi
+
+  proto:clean:windows:
+    desc: Очищает сгенерированные файлы (Windows)
     cmds:
       - powershell -Command "if (Test-Path -Path '{{.GO_OUT_DIR}}') { Remove-Item -Recurse -Force -Path '{{.GO_OUT_DIR}}'; Write-Host 'Директория {{.GO_OUT_DIR}} очищена' } else { Write-Host 'Директория {{.GO_OUT_DIR}} не существует' }"
 
@@ -15,10 +25,18 @@ tasks:
     cmds:
       - go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
       - go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+      - go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
+      - go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest
+      - |
+        echo "Внимание: Убедитесь, что на вашей системе установлен protoc (Protocol Buffers Compiler)"
       - echo "Зависимости успешно установлены"
 
-  proto:generate:
-    desc: Генерирует код из proto файлов
+  proto:gen:linux:
+    desc: Генерирует код из proto файлов (Linux)
+    cmds:
+      - bash scripts/gen_proto.sh
+
+  proto:gen:windows:
+    desc: Генерирует код из proto файлов (Windows)
     cmds:
       - powershell -ExecutionPolicy Bypass -File scripts/generate_proto.ps1
-      - go mod tidy

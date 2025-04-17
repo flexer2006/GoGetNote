@@ -4,7 +4,7 @@ package auth.v1;
 
 import "api/google/protobuf/timestamp.proto";
 import "api/google/protobuf/empty.proto";
-import "api/google/api/annotations.proto"; // Добавлен импорт для HTTP аннотаций
+import "api/google/api/annotations.proto";
 
 option go_package = "gitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/auth/v1;authv1";
 
@@ -18,7 +18,7 @@ service AuthService {
     };
   }
 
-  // Вход в систему
+  // Авторизация пользователя
   rpc Login(LoginRequest) returns (LoginResponse) {
     option (google.api.http) = {
       post: "/api/v1/auth/login"

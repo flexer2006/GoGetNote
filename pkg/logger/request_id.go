@@ -3,29 +3,38 @@ package logger
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
-// contextKey - специальный тип для ключей контекста
-type contextKey string
+// requestIDKey - ключ контекста для хранения request_id.
+type requestIDKeyType struct{}
 
-const (
-	RequestID               = "request_id"
-	RequestIDKey contextKey = "request_id"
-)
+var requestIDKey = requestIDKeyType{}
 
+// NewRequestIDContext создает новый контекст с идентификатором запроса.
 func NewRequestIDContext(ctx context.Context, requestID string) context.Context {
-	return context.WithValue(ctx, RequestIDKey, requestID)
+	if requestID == "" {
+		requestID = GenerateRequestID()
+	}
+	return context.WithValue(ctx, requestIDKey, requestID)
 }
 
-func getRequestID(ctx context.Context) (string, bool) {
-	id, ok := ctx.Value(RequestIDKey).(string)
+// GetRequestID извлекает идентификатор запроса из контекста.
+func GetRequestID(ctx context.Context) (string, bool) {
+	id, ok := ctx.Value(requestIDKey).(string)
 	return id, ok
 }
 
-func addRequestID(ctx context.Context, fields []zap.Field) []zap.Field {
-	if id, ok := getRequestID(ctx); ok {
-		fields = append(fields, zap.String(RequestID, id))
+// GenerateRequestID генерирует новый идентификатор запроса.
+func GenerateRequestID() string {
+	return uuid.New().String()
+}
+
+// WithRequestID создает копию логгера с добавленным полем RequestID.
+func (l *Logger) WithRequestID(ctx context.Context) *Logger {
+	if id, ok := GetRequestID(ctx); ok {
+		return l.With(zap.String(RequestID, id))
 	}
-	return fields
+	return l
 }
