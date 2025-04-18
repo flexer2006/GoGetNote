@@ -15,11 +15,13 @@ func main() {
 	dsn := "host=localhost user=noteuser password=securepassword dbname=note port=5432 sslmode=disable"
 	db := notes.InitDB(dsn)
 
+	// Redis client
+	redisClient := notes.NewRedisClient()
 	// Создание репозитория для заметок
 	noteRepository := notes.NewNoteRepository(db.DB)
 
 	// Создание сервиса заметок
-	noteService := notes.NewNoteService(noteRepository)
+	noteService := notes.NewNoteService(noteRepository, redisClient)
 
 	// Создание GRPC сервера
 	grpcServer := grpc.NewServer()
