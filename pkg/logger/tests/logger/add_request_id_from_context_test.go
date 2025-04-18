@@ -23,11 +23,11 @@ func TestAddRequestIDFromContext(t *testing.T) {
 		tempLog.Info(ctx, "test message")
 
 		logWithReqID := tempLog.WithRequestID(ctx)
-		assert.NotSame(t, tempLog, logWithReqID, "WithRequestID should return a new logger when request ID exists")
+		assert.NotSame(t, tempLog, logWithReqID, "withRequestID should return a new logger when request ID exists")
 
 		emptyCtx := context.Background()
 		logWithoutReqID := tempLog.WithRequestID(emptyCtx)
-		assert.Same(t, tempLog, logWithoutReqID, "WithRequestID should return same logger when no request ID exists")
+		assert.Same(t, tempLog, logWithoutReqID, "withRequestID should return same logger when no request ID exists")
 	})
 
 	t.Run("context without request ID doesn't add field", func(t *testing.T) {
@@ -37,7 +37,7 @@ func TestAddRequestIDFromContext(t *testing.T) {
 		ctx := context.Background()
 
 		logWithoutReqID := tempLog.WithRequestID(ctx)
-		assert.Same(t, tempLog, logWithoutReqID, "WithRequestID should return same logger when no request ID exists")
+		assert.Same(t, tempLog, logWithoutReqID, "withRequestID should return same logger when no request ID exists")
 
 		assert.NotPanics(t, func() {
 			tempLog.Info(ctx, "plain context message")
@@ -56,8 +56,8 @@ func TestAddRequestIDFromContext(t *testing.T) {
 
 		logWithBoth := logWithCustomField.WithRequestID(ctx)
 
-		assert.NotSame(t, tempLog, logWithBoth, "Logger with both fields should differ from base logger")
-		assert.NotSame(t, logWithCustomField, logWithBoth, "Logger with both fields should differ from logger with only custom field")
+		assert.NotSame(t, tempLog, logWithBoth, "logger with both fields should differ from base logger")
+		assert.NotSame(t, logWithCustomField, logWithBoth, "logger with both fields should differ from logger with only custom field")
 
 		assert.NotPanics(t, func() {
 			logWithBoth.Info(ctx, "message with custom field")

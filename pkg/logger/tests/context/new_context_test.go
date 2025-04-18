@@ -66,7 +66,7 @@ func TestNewContext(t *testing.T) {
 
 		_, err := logger.FromContext(ctx)
 
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.ErrorIs(t, err, logger.ErrLoggerNotFound)
 	})
 
@@ -77,8 +77,10 @@ func TestNewContext(t *testing.T) {
 		baseCtx := context.Background()
 		loggerCtx := logger.NewContext(baseCtx, testLogger)
 
-		childKey := "child-key"
+		type childKeyType struct{}
+		childKey := childKeyType{}
 		childValue := "child-value"
+
 		childCtx := context.WithValue(loggerCtx, childKey, childValue)
 
 		retrievedLogger, err := logger.FromContext(childCtx)

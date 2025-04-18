@@ -17,7 +17,7 @@ func TestInitGlobalLogger(t *testing.T) {
 		logger.SetGlobalLogger(nil)
 
 		err := logger.InitGlobalLogger(logger.Development)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		emptyCtx := context.Background()
 		globalLog := logger.Log(emptyCtx)
@@ -35,7 +35,7 @@ func TestInitGlobalLogger(t *testing.T) {
 		require.NotNil(t, firstLogger)
 
 		err2 := logger.InitGlobalLogger(logger.Development)
-		assert.NoError(t, err2)
+		require.NoError(t, err2)
 
 		secondLogger := logger.Log(emptyCtx)
 
@@ -46,6 +46,6 @@ func TestInitGlobalLogger(t *testing.T) {
 		logger.SetGlobalLogger(nil)
 
 		err := logger.InitGlobalLoggerWithLevel(logger.Development, "debug")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 }

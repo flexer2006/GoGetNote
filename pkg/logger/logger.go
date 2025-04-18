@@ -1,3 +1,5 @@
+// Package logger предоставляет функциональность логирования для приложения,
+// включая контекстное логирование, глобальные loggers и утилиты для работы с логами.
 package logger
 
 import (
@@ -10,10 +12,12 @@ import (
 )
 
 const (
+	// ErrInitializeLogger сообщение об ошибке, возникающей при инициализации logger.
 	ErrInitializeLogger = "failed to initialize logger"
 )
 
 const (
+	// RequestID ключ для идентификатора запроса в контексте.
 	RequestID = "request_id"
 )
 
@@ -110,7 +114,10 @@ func (l *Logger) Fatal(ctx context.Context, msg string, fields ...zap.Field) {
 
 // Sync сбрасывает все буферизованные записи logger.
 func (l *Logger) Sync() error {
-	return l.l.Sync()
+	if err := l.l.Sync(); err != nil {
+		return fmt.Errorf("failed to sync logger: %w", err)
+	}
+	return nil
 }
 
 // addRequestIDFromContext добавляет requestID из контекста в поля logger.

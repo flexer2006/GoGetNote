@@ -11,6 +11,14 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	msgNewLoggerWithID        = "withRequestID should return a new logger when request ID exists"
+	msgSameLoggerNoID         = "withRequestID should return the same logger when no request ID exists"
+	msgNewLogger              = "withRequestID should return a new logger"
+	msgSameLoggerEmptyContext = "withRequestID should return the same logger for empty context"
+	msgNewLoggerContextWithID = "withRequestID should return a new logger for context with ID"
+)
+
 func TestWithRequestID(t *testing.T) {
 	t.Run("adds request ID field when present in context", func(t *testing.T) {
 		baseLogger, err := logger.NewLogger(logger.Development, "debug")
@@ -21,14 +29,14 @@ func TestWithRequestID(t *testing.T) {
 
 		loggerWithID := baseLogger.WithRequestID(ctx)
 
-		assert.NotSame(t, baseLogger, loggerWithID, "WithRequestID should return a new logger when request ID exists")
+		assert.NotSame(t, baseLogger, loggerWithID, msgNewLoggerWithID)
 
 		loggerWithID.Info(ctx, "test message with request ID")
 
 		emptyCtx := context.Background()
 		loggerWithoutID := baseLogger.WithRequestID(emptyCtx)
 
-		assert.Same(t, baseLogger, loggerWithoutID, "WithRequestID should return the same logger when no request ID exists")
+		assert.Same(t, baseLogger, loggerWithoutID, msgSameLoggerNoID)
 	})
 
 	t.Run("returns original logger when no request ID in context", func(t *testing.T) {
@@ -39,7 +47,7 @@ func TestWithRequestID(t *testing.T) {
 
 		resultLogger := baseLogger.WithRequestID(ctx)
 
-		assert.Same(t, baseLogger, resultLogger, "WithRequestID should return the same logger when no request ID exists")
+		assert.Same(t, baseLogger, resultLogger, msgSameLoggerNoID)
 	})
 
 	t.Run("preserves existing fields when adding request ID", func(t *testing.T) {
@@ -55,10 +63,9 @@ func TestWithRequestID(t *testing.T) {
 
 		loggerWithRequestID := loggerWithField.WithRequestID(ctx)
 
-		assert.NotSame(t, loggerWithField, loggerWithRequestID, "WithRequestID should return a new logger")
+		assert.NotSame(t, loggerWithField, loggerWithRequestID, msgNewLogger)
 
 		loggerWithRequestID.Info(ctx, "test message with both fields")
-
 	})
 
 	t.Run("handles nil context safely", func(t *testing.T) {
@@ -69,7 +76,7 @@ func TestWithRequestID(t *testing.T) {
 
 		resultLogger := baseLogger.WithRequestID(ctx)
 
-		assert.Same(t, baseLogger, resultLogger, "WithRequestID should return the same logger for empty context")
+		assert.Same(t, baseLogger, resultLogger, msgSameLoggerEmptyContext)
 	})
 
 	t.Run("request ID field has the expected name", func(t *testing.T) {
@@ -83,6 +90,6 @@ func TestWithRequestID(t *testing.T) {
 
 		loggerWithRequestID.Info(ctx, "test message for field name")
 
-		assert.NotSame(t, baseLogger, loggerWithRequestID, "WithRequestID should return a new logger for context with ID")
+		assert.NotSame(t, baseLogger, loggerWithRequestID, msgNewLoggerContextWithID)
 	})
 }

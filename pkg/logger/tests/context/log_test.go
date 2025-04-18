@@ -46,11 +46,11 @@ func TestLog(t *testing.T) {
 		ctx := context.Background()
 
 		result := logger.Log(ctx)
-		assert.NotNil(t, result, "Fallback logger should not be nil")
+		assert.NotNil(t, result, "fallback logger should not be nil")
 
 		newLogger, err := logger.NewLogger(logger.Development, "debug")
 		require.NoError(t, err)
-		assert.NotSame(t, newLogger, result, "Should not be a newly created logger")
+		assert.NotSame(t, newLogger, result, "should not be a newly created logger")
 	})
 
 	t.Run("handles empty context by returning global or fallback logger", func(t *testing.T) {
@@ -65,7 +65,7 @@ func TestLog(t *testing.T) {
 
 		logger.SetGlobalLogger(nil)
 		result = logger.Log(emptyCtx)
-		assert.NotNil(t, result, "Should return fallback logger with empty context and no global logger")
+		assert.NotNil(t, result, "should return fallback logger with empty context and no global logger")
 	})
 
 	t.Run("returns the same fallback logger instance each time", func(t *testing.T) {
@@ -75,6 +75,6 @@ func TestLog(t *testing.T) {
 		result1 := logger.Log(ctx)
 		result2 := logger.Log(ctx)
 
-		assert.Same(t, result1, result2, "Fallback logger should be a singleton")
+		assert.Same(t, result1, result2, "fallback logger should be a singleton")
 	})
 }

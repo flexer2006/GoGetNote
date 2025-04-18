@@ -1,3 +1,5 @@
+// Package shutdown предоставляет функциональность для корректного завершения приложения
+// путем ожидания и обработки сигналов SIGINT и SIGTERM.
 package shutdown
 
 import (
@@ -19,18 +21,18 @@ func Wait(timeout time.Duration, hooks ...func(context.Context) error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	var wg sync.WaitGroup
+	var wgp sync.WaitGroup
 	for _, hook := range hooks {
-		wg.Add(1)
+		wgp.Add(1)
 		go func(fn func(context.Context) error) {
-			defer wg.Done()
+			defer wgp.Done()
 			_ = fn(ctx)
 		}(hook)
 	}
 
 	done := make(chan struct{})
 	go func() {
-		wg.Wait()
+		wgp.Wait()
 		close(done)
 	}()
 

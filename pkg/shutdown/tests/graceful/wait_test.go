@@ -11,16 +11,28 @@ import (
 	"gogetnote/pkg/shutdown"
 )
 
+const (
+	errFailedToFindProcess      = "failed to find process:"
+	errFailedToSendSignal       = "failed to send signal:"
+	errHook1NotCalled           = "hook 1 was not called"
+	errHook2NotCalled           = "hook 2 was not called"
+	errWaitFunctionTimeout      = "wait function didn't return within the expected time"
+	errWaitDidntRespectTimeout  = "wait didn't respect timeout: took"
+	errSlowHookShouldntComplete = "the slow hook shouldn't have completed"
+	errHooksRunSequentially     = "hooks appear to run sequentially:"
+	errTimeoutWaitingForHooks   = "timed out waiting for hooks to complete"
+)
+
 func TestWaitExecutesHooks(t *testing.T) {
 	hook1Called := make(chan struct{})
 	hook2Called := make(chan struct{})
 
-	hook1 := func(ctx context.Context) error {
+	hook1 := func(_ context.Context) error {
 		close(hook1Called)
 		return nil
 	}
 
-	hook2 := func(ctx context.Context) error {
+	hook2 := func(_ context.Context) error {
 		close(hook2Called)
 		return nil
 	}
@@ -33,27 +45,27 @@ func TestWaitExecutesHooks(t *testing.T) {
 
 	process, err := os.FindProcess(os.Getpid())
 	if err != nil {
-		t.Fatalf("Failed to find process: %v", err)
+		t.Fatalf("%s %v", errFailedToFindProcess, err)
 	}
 	if err := process.Signal(syscall.SIGTERM); err != nil {
-		t.Fatalf("Failed to send signal: %v", err)
+		t.Fatalf("%s %v", errFailedToSendSignal, err)
 	}
 
 	select {
 	case <-hook1Called:
 	case <-time.After(2 * time.Second):
-		t.Error("Hook 1 was not called")
+		t.Error(errHook1NotCalled)
 	}
 
 	select {
 	case <-hook2Called:
 	case <-time.After(2 * time.Second):
-		t.Error("Hook 2 was not called")
+		t.Error(errHook2NotCalled)
 	}
 }
 
 func TestWaitRespectsTimeout(t *testing.T) {
-	var mu sync.Mutex
+	var mtx sync.Mutex
 	completed := false
 
 	waitDone := make(chan struct{})
@@ -61,9 +73,9 @@ func TestWaitRespectsTimeout(t *testing.T) {
 	slowHook := func(ctx context.Context) error {
 		select {
 		case <-time.After(2 * time.Second):
-			mu.Lock()
+			mtx.Lock()
 			completed = true
-			mu.Unlock()
+			mtx.Unlock()
 			return nil
 		case <-ctx.Done():
 			return ctx.Err()
@@ -83,36 +95,36 @@ func TestWaitRespectsTimeout(t *testing.T) {
 	select {
 	case <-waitDone:
 	case <-time.After(3 * time.Second):
-		t.Fatal("Wait function didn't return within the expected time")
+		t.Fatal(errWaitFunctionTimeout)
 	}
 
 	elapsed := time.Since(start)
 	if elapsed > 750*time.Millisecond {
-		t.Errorf("Wait didn't respect timeout: took %v", elapsed)
+		t.Errorf("%s %v", errWaitDidntRespectTimeout, elapsed)
 	}
 
-	mu.Lock()
-	defer mu.Unlock()
+	mtx.Lock()
+	defer mtx.Unlock()
 	if completed {
-		t.Error("The slow hook shouldn't have completed")
+		t.Error(errSlowHookShouldntComplete)
 	}
 }
 
 func TestWaitRunsHooksConcurrently(t *testing.T) {
-	var wg sync.WaitGroup
-	wg.Add(2)
+	var wgp sync.WaitGroup
+	wgp.Add(2)
 
 	start := time.Now()
 
-	hook1 := func(ctx context.Context) error {
+	hook1 := func(_ context.Context) error {
 		time.Sleep(500 * time.Millisecond)
-		wg.Done()
+		wgp.Done()
 		return nil
 	}
 
-	hook2 := func(ctx context.Context) error {
+	hook2 := func(_ context.Context) error {
 		time.Sleep(500 * time.Millisecond)
-		wg.Done()
+		wgp.Done()
 		return nil
 	}
 
@@ -126,7 +138,7 @@ func TestWaitRunsHooksConcurrently(t *testing.T) {
 
 	waitCh := make(chan struct{})
 	go func() {
-		wg.Wait()
+		wgp.Wait()
 		close(waitCh)
 	}()
 
@@ -134,9 +146,9 @@ func TestWaitRunsHooksConcurrently(t *testing.T) {
 	case <-waitCh:
 		elapsed := time.Since(start)
 		if elapsed >= 900*time.Millisecond {
-			t.Errorf("Hooks appear to run sequentially: %v", elapsed)
+			t.Errorf("%s %v", errHooksRunSequentially, elapsed)
 		}
 	case <-time.After(2 * time.Second):
-		t.Fatal("Timed out waiting for hooks to complete")
+		t.Fatal(errTimeoutWaitingForHooks)
 	}
 }

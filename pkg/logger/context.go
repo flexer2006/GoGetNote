@@ -64,7 +64,7 @@ func InitGlobalLogger(env Environment) error {
 	var err error
 	globalLogger, err = NewLogger(env, "")
 	if err != nil {
-		return fmt.Errorf("%s: %w", ErrInitGlobalLogger, err)
+		return fmt.Errorf("%w: %w", ErrInitGlobalLogger, err)
 	}
 	return nil
 }
@@ -81,7 +81,7 @@ func InitGlobalLoggerWithLevel(env Environment, level string) error {
 	var err error
 	globalLogger, err = NewLogger(env, level)
 	if err != nil {
-		return fmt.Errorf("%s: %w", ErrInitGlobalLogger, err)
+		return fmt.Errorf("%w: %w", ErrInitGlobalLogger, err)
 	}
 	return nil
 }
