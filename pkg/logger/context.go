@@ -9,10 +9,9 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// Переменные для ошибок логгера.
+// Переменные для ошибок logger.
 var (
 	ErrLoggerNotFound   = fmt.Errorf("logger not found in context")
-	ErrInitLogger       = fmt.Errorf("failed to initialize logger")
 	ErrInitGlobalLogger = fmt.Errorf("failed to initialize global logger")
 )
 
@@ -36,12 +35,12 @@ func init() {
 	fallbackLogger = &Logger{l: zapLogger.With(zap.String("logger", "fallback"))}
 }
 
-// NewContext создает новый контекст с логгером.
+// NewContext создает новый контекст с logger.
 func NewContext(ctx context.Context, logger *Logger) context.Context {
 	return context.WithValue(ctx, loggerKey, logger)
 }
 
-// FromContext извлекает логгер из контекста.
+// FromContext извлекает logger из контекста.
 func FromContext(ctx context.Context) (*Logger, error) {
 	if ctx == nil {
 		return nil, fmt.Errorf("context validation: %w", ErrLoggerNotFound)
@@ -53,7 +52,7 @@ func FromContext(ctx context.Context) (*Logger, error) {
 	return logger, nil
 }
 
-// InitGlobalLogger инициализирует глобальный логгер.
+// InitGlobalLogger инициализирует глобальный logger.
 func InitGlobalLogger(env Environment) error {
 	globalLoggerMu.Lock()
 	defer globalLoggerMu.Unlock()
@@ -70,7 +69,7 @@ func InitGlobalLogger(env Environment) error {
 	return nil
 }
 
-// InitGlobalLoggerWithLevel инициализирует глобальный логгер с указанным уровнем.
+// InitGlobalLoggerWithLevel инициализирует глобальный logger с указанным уровнем.
 func InitGlobalLoggerWithLevel(env Environment, level string) error {
 	globalLoggerMu.Lock()
 	defer globalLoggerMu.Unlock()
@@ -87,14 +86,14 @@ func InitGlobalLoggerWithLevel(env Environment, level string) error {
 	return nil
 }
 
-// SetGlobalLogger устанавливает экземпляр глобального логгера.
+// SetGlobalLogger устанавливает экземпляр глобального logger.
 func SetGlobalLogger(logger *Logger) {
 	globalLoggerMu.Lock()
 	defer globalLoggerMu.Unlock()
 	globalLogger = logger
 }
 
-// Log возвращает логгер из контекста или глобальный логгер.
+// Log возвращает logger из контекста или глобальный logger.
 func Log(ctx context.Context) *Logger {
 	if logger, ok := ctx.Value(loggerKey).(*Logger); ok {
 		return logger

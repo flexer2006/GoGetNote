@@ -57,7 +57,7 @@ func TestDatabasePing(t *testing.T) {
 
 		tempPool, err := pgxpool.New(ctx, tempDSN)
 		if err != nil {
-			t.Skip("Skipping test as no PostgreSQL database is available")
+			t.Skip("Skipping test as no Postgres database is available")
 		}
 		tempPool.Close()
 

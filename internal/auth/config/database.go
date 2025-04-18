@@ -15,7 +15,7 @@ type PostgresConfig struct {
 	MaxConn  int    `yaml:"max_conn" env:"AUTH_POSTGRES_MAX_CONN" env-default:"10"`
 }
 
-// GetDSN возвращает строку подключения к PostgreSQL.
+// GetDSN возвращает строку подключения к Postgres.
 func (p *PostgresConfig) GetDSN() string {
 	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		p.Host, p.Port, p.User, p.Password, p.Database)

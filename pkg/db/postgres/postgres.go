@@ -10,28 +10,27 @@ import (
 	"gogetnote/pkg/logger"
 )
 
-// Константы для сообщений логгера.
+// Константы для сообщений logger.
 const (
-	LogConnecting        = "connecting to PostgreSQL database"
-	LogConnected         = "successfully connected to PostgreSQL"
-	LogClosing           = "closing PostgreSQL connection pool"
+	LogConnecting        = "connecting to Postgres database"
+	LogConnected         = "successfully connected to Postgres"
+	LogClosing           = "closing Postgres connection pool"
 	LogMigrationsApplied = "database migrations successfully applied"
 )
 
 // Константы для сообщений об ошибках.
 const (
-	ErrParseConfig     = "failed to parse connection config"
-	ErrCreatePool      = "failed to create connection pool"
-	ErrPingDatabase    = "failed to ping database"
-	ErrMigrateDatabase = "failed to apply migrations"
+	ErrParseConfig  = "failed to parse connection config"
+	ErrCreatePool   = "failed to create connection pool"
+	ErrPingDatabase = "failed to ping database"
 )
 
-// Database представляет соединение с PostgreSQL.
+// Database представляет соединение с Postgres.
 type Database struct {
 	pool *pgxpool.Pool
 }
 
-// New создает новое соединение с базой данных PostgreSQL.
+// New создает новое соединение с базой данных Postgres.
 func New(ctx context.Context, dsn string, minConn, maxConn int) (*Database, error) {
 	log := logger.Log(ctx)
 

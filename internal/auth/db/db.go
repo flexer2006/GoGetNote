@@ -13,7 +13,7 @@ import (
 	"gogetnote/pkg/logger"
 )
 
-// Константы для сообщений логгера.
+// Константы для сообщений logger.
 const (
 	LogDBInitializing    = "initializing authentication database"
 	LogDBInitialized     = "authentication database initialized successfully"
@@ -22,7 +22,6 @@ const (
 
 // Константы для сообщений об ошибках.
 const (
-	ErrDBInit       = "failed to initialize authentication database"
 	ErrDBMigrations = "failed to apply authentication database migrations"
 	ErrDBConnection = "failed to connect to authentication database"
 	ErrGetPath      = "failed to get path"

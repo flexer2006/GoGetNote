@@ -10,7 +10,7 @@ import (
 )
 
 // Wait блокирует выполнение до получения сигнала SIGINT или SIGTERM,
-// затем выполняет все хуки в рамках заданного таймаута.
+// затем выполняет все хуки в рамках заданного timeout.
 func Wait(timeout time.Duration, hooks ...func(context.Context) error) {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)

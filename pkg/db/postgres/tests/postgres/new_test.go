@@ -26,7 +26,7 @@ func TestDatabaseNew(t *testing.T) {
 		db, err := postgres.New(ctx, dsn, minConn, maxConn)
 
 		if err != nil && strings.Contains(err.Error(), "failed to ping database") {
-			t.Skip("Skipping test as PostgreSQL database is not available")
+			t.Skip("Skipping test as Postgres database is not available")
 		}
 
 		require.NoError(t, err, "Should successfully connect to database")

@@ -64,11 +64,3 @@ func TestAddRequestIDFromContext(t *testing.T) {
 		})
 	})
 }
-
-type Logger struct {
-	l *zap.Logger
-}
-
-func SetLogger(logger *Logger, zapLogger *zap.Logger) *Logger {
-	return &Logger{l: zapLogger}
-}

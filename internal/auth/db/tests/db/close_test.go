@@ -14,6 +14,13 @@ import (
 	"gogetnote/pkg/logger"
 )
 
+// Вспомогательная функция для безопасной отмены патча
+func safeUnpatch(t *testing.T, p *mpatch.Patch) {
+	if err := p.Unpatch(); err != nil {
+		t.Errorf("Failed to unpatch: %v", err)
+	}
+}
+
 func TestClose(t *testing.T) {
 	err := logger.InitGlobalLoggerWithLevel(logger.Development, "info")
 	require.NoError(t, err)
@@ -27,7 +34,11 @@ func TestClose(t *testing.T) {
 			closeCalled = true
 		})
 		require.NoError(t, err, "Error patching Close method")
-		defer patch.Unpatch()
+		defer func() {
+			if err := patch.Unpatch(); err != nil {
+				t.Errorf("Failed to unpatch Close method: %v", err)
+			}
+		}()
 
 		cfg := &config.PostgresConfig{
 			Host:     "testhost",
@@ -43,13 +54,13 @@ func TestClose(t *testing.T) {
 			return nil
 		})
 		require.NoError(t, err)
-		defer migratePatch.Unpatch()
+		defer safeUnpatch(t, migratePatch)
 
 		newPatch, err := mpatch.PatchMethod(postgres.New, func(ctx context.Context, dsn string, minConn, maxConn int) (*postgres.Database, error) {
 			return &postgres.Database{}, nil
 		})
 		require.NoError(t, err)
-		defer newPatch.Unpatch()
+		defer safeUnpatch(t, newPatch)
 
 		database, err := db.New(ctx, cfg, "./migrations")
 		require.NoError(t, err)
@@ -63,7 +74,7 @@ func TestClose(t *testing.T) {
 		patch, err := mpatch.PatchInstanceMethodByName(reflect.TypeOf(&postgres.Database{}), "Close", func(db *postgres.Database, ctx context.Context) {
 		})
 		require.NoError(t, err)
-		defer patch.Unpatch()
+		defer safeUnpatch(t, patch)
 
 		cfg := &config.PostgresConfig{
 			Host:     "testhost",
@@ -79,13 +90,13 @@ func TestClose(t *testing.T) {
 			return nil
 		})
 		require.NoError(t, err)
-		defer migratePatch.Unpatch()
+		defer safeUnpatch(t, migratePatch)
 
 		newPatch, err := mpatch.PatchMethod(postgres.New, func(ctx context.Context, dsn string, minConn, maxConn int) (*postgres.Database, error) {
 			return &postgres.Database{}, nil
 		})
 		require.NoError(t, err)
-		defer newPatch.Unpatch()
+		defer safeUnpatch(t, newPatch)
 
 		database, err := db.New(ctx, cfg, "./migrations")
 		require.NoError(t, err)

@@ -10,7 +10,7 @@ type LoggingConfig struct {
 	Mode  string `yaml:"mode" env:"AUTH_LOGGER_MODE" env-default:"development"`
 }
 
-// GetEnvironment получает строку режима в logger.Environment.
+// GetEnvironment получает строку режима в logger environment.
 func (l *LoggingConfig) GetEnvironment() logger.Environment {
 	if l.Mode == "production" {
 		return logger.Production

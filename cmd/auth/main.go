@@ -39,7 +39,6 @@ const (
 // Константы для сообщений сервиса.
 const (
 	LogServiceStarted      = "authentication service started"
-	LogServiceShuttingDown = "authentication service shutting down"
 	LogServiceShutdownDone = "authentication service shutdown complete"
 	LogClosingDB           = "closing database connections"
 	LogStoppingHTTP        = "stopping HTTP server"
@@ -70,20 +69,17 @@ func main() {
 		}
 	}()
 
-	// Загружаем конфигурацию
 	cfg, err := config.Load(ctx)
 	if err != nil {
 		log.Fatal(ctx, ErrLoadConfig, zap.Error(err))
 	}
 
-	// Инициализируем логгер с настройками из конфигурации
 	finalLogger, err := logger.NewLogger(cfg.Logging.GetEnvironment(), cfg.Logging.Level)
 	if err != nil {
 		log.Fatal(ctx, ErrInitLoggerWithConfig, zap.Error(err))
 	}
 	logger.SetGlobalLogger(finalLogger)
 
-	// Инициализируем базу данных
 	database, err := db.New(ctx, &cfg.Postgres, "migrations/auth")
 	if err != nil {
 		log.Fatal(ctx, ErrInitDB, zap.Error(err))
@@ -99,7 +95,7 @@ func main() {
 	// - gRPC сервер
 	// - и т.д.
 
-	// Настраиваем graceful shutdown с таймаутом из конфигурации
+	// Настраиваем graceful shutdown с timeout из конфигурации
 	shutdown.Wait(cfg.Shutdown.GetTimeout(),
 		// Здесь добавьте функции для graceful shutdown ваших компонентов:
 		func(ctx context.Context) error {

@@ -67,7 +67,7 @@ func TestNewContext(t *testing.T) {
 		_, err := logger.FromContext(ctx)
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), logger.ErrLoggerNotFound)
+		assert.ErrorIs(t, err, logger.ErrLoggerNotFound)
 	})
 
 	t.Run("context hierarchy maintains logger", func(t *testing.T) {

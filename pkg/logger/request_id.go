@@ -31,7 +31,7 @@ func GenerateRequestID() string {
 	return uuid.New().String()
 }
 
-// WithRequestID создает копию логгера с добавленным полем RequestID.
+// WithRequestID создает копию logger с добавленным полем RequestID.
 func (l *Logger) WithRequestID(ctx context.Context) *Logger {
 	if id, ok := GetRequestID(ctx); ok {
 		return l.With(zap.String(RequestID, id))

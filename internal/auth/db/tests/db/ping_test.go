@@ -25,7 +25,7 @@ func TestPing(t *testing.T) {
 			return nil
 		})
 		require.NoError(t, err)
-		defer migratePatch.Unpatch()
+		defer safeUnpatch(t, migratePatch)
 
 		cfg := &config.PostgresConfig{
 			Host:     "localhost",
@@ -53,7 +53,7 @@ func TestPing(t *testing.T) {
 			return nil
 		})
 		require.NoError(t, err)
-		defer migratePatch.Unpatch()
+		defer safeUnpatch(t, migratePatch)
 
 		invalidCfg := &config.PostgresConfig{
 			Host:     "nonexistenthost",
@@ -76,7 +76,7 @@ func TestPing(t *testing.T) {
 			return nil
 		})
 		require.NoError(t, err)
-		defer migratePatch.Unpatch()
+		defer safeUnpatch(t, migratePatch)
 
 		cfg := &config.PostgresConfig{
 			Host:     "localhost",

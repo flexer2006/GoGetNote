@@ -40,7 +40,7 @@ func TestNew(t *testing.T) {
 			return nil
 		})
 		require.NoError(t, err, "Error patching MigrateDSN")
-		defer migratePatch.Unpatch()
+		defer safeUnpatch(t, migratePatch)
 
 		mockDB := &postgres.Database{}
 
@@ -51,7 +51,7 @@ func TestNew(t *testing.T) {
 			return mockDB, nil
 		})
 		require.NoError(t, err, "Error patching postgres.New")
-		defer newPatch.Unpatch()
+		defer safeUnpatch(t, newPatch)
 
 		database, err := db.New(ctx, cfg, migrationsDir)
 
@@ -67,7 +67,7 @@ func TestNew(t *testing.T) {
 			return expectedErr
 		})
 		require.NoError(t, err, "Error patching MigrateDSN")
-		defer migratePatch.Unpatch()
+		defer safeUnpatch(t, migratePatch)
 
 		database, err := db.New(ctx, cfg, migrationsDir)
 
@@ -84,13 +84,13 @@ func TestNew(t *testing.T) {
 			return nil
 		})
 		require.NoError(t, err, "Error patching MigrateDSN")
-		defer migratePatch.Unpatch()
+		defer safeUnpatch(t, migratePatch)
 
 		newPatch, err := mpatch.PatchMethod(postgres.New, func(ctx context.Context, dsn string, minConn, maxConn int) (*postgres.Database, error) {
 			return nil, expectedErr
 		})
 		require.NoError(t, err, "Error patching postgres.New")
-		defer newPatch.Unpatch()
+		defer safeUnpatch(t, newPatch)
 
 		database, err := db.New(ctx, cfg, migrationsDir)
 
@@ -108,13 +108,13 @@ func TestNew(t *testing.T) {
 			return nil
 		})
 		require.NoError(t, err, "Error patching MigrateDSN")
-		defer migratePatch.Unpatch()
+		defer safeUnpatch(t, migratePatch)
 
 		newPatch, err := mpatch.PatchMethod(postgres.New, func(ctx context.Context, dsn string, minConn, maxConn int) (*postgres.Database, error) {
 			return &postgres.Database{}, nil
 		})
 		require.NoError(t, err, "Error patching postgres.New")
-		defer newPatch.Unpatch()
+		defer safeUnpatch(t, newPatch)
 
 		database, err := db.New(ctx, cfg, absPath)
 
@@ -133,13 +133,13 @@ func TestNew(t *testing.T) {
 			return nil
 		})
 		require.NoError(t, err, "Error patching MigrateDSN")
-		defer migratePatch.Unpatch()
+		defer safeUnpatch(t, migratePatch)
 
 		newPatch, err := mpatch.PatchMethod(postgres.New, func(ctx context.Context, dsn string, minConn, maxConn int) (*postgres.Database, error) {
 			return &postgres.Database{}, nil
 		})
 		require.NoError(t, err, "Error patching postgres.New")
-		defer newPatch.Unpatch()
+		defer safeUnpatch(t, newPatch)
 
 		database, err := db.New(ctx, cfg, relPath)
 
@@ -154,7 +154,7 @@ func TestNew(t *testing.T) {
 			return "", expectedErr
 		})
 		require.NoError(t, err, "Error patching filepath.Abs")
-		defer absPatch.Unpatch()
+		defer safeUnpatch(t, absPatch)
 
 		database, err := db.New(ctx, cfg, "./relative/path")
 

@@ -9,7 +9,7 @@ type ShutdownConfig struct {
 	Timeout int `yaml:"timeout" env:"AUTH_GRACEFUL_SHUTDOWN_TIMEOUT" env-default:"5"`
 }
 
-// GetTimeout возвращает таймаут как time.Duration.
+// GetTimeout возвращает timeout как time.Duration.
 func (s *ShutdownConfig) GetTimeout() time.Duration {
 	return time.Duration(s.Timeout) * time.Second
 }

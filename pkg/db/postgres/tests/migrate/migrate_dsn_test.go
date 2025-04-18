@@ -15,6 +15,13 @@ import (
 	"github.com/undefinedlabs/go-mpatch"
 )
 
+// Вспомогательная функция для безопасной отмены патча
+func safeUnpatch(t *testing.T, p *mpatch.Patch) {
+	if err := p.Unpatch(); err != nil {
+		t.Errorf("Failed to unpatch: %v", err)
+	}
+}
+
 func TestMigrateDSN(t *testing.T) {
 	err := logger.InitGlobalLoggerWithLevel(logger.Development, "info")
 	require.NoError(t, err)
@@ -31,7 +38,11 @@ func TestMigrateDSN(t *testing.T) {
 			return nil, nil
 		})
 		require.NoError(t, err, "Failed to patch migrate.New")
-		defer newPatch.Unpatch()
+		defer func() {
+			if err := newPatch.Unpatch(); err != nil {
+				t.Errorf("Failed to unpatch: %v", err)
+			}
+		}()
 
 		upCalled := false
 		upPatch, err := mpatch.PatchMethod((*migrate.Migrate).Up, func(_ *migrate.Migrate) error {
@@ -39,7 +50,7 @@ func TestMigrateDSN(t *testing.T) {
 			return nil
 		})
 		require.NoError(t, err, "Failed to patch Up method")
-		defer upPatch.Unpatch()
+		defer safeUnpatch(t, upPatch)
 
 		closeCalled := false
 		closePatch, err := mpatch.PatchMethod((*migrate.Migrate).Close, func(_ *migrate.Migrate) (error, error) {
@@ -47,7 +58,7 @@ func TestMigrateDSN(t *testing.T) {
 			return nil, nil
 		})
 		require.NoError(t, err, "Failed to patch Close method")
-		defer closePatch.Unpatch()
+		defer safeUnpatch(t, closePatch)
 
 		err = postgres.MigrateDSN(ctx, dsn, migrationsPath)
 		assert.NoError(t, err)
@@ -63,7 +74,7 @@ func TestMigrateDSN(t *testing.T) {
 			return nil, expectedErr
 		})
 		require.NoError(t, err, "Failed to patch migrate.New")
-		defer patch.Unpatch()
+		defer safeUnpatch(t, patch)
 
 		err = postgres.MigrateDSN(ctx, dsn, migrationsPath)
 
@@ -79,19 +90,19 @@ func TestMigrateDSN(t *testing.T) {
 			return nil, nil
 		})
 		require.NoError(t, err, "Failed to patch migrate.New")
-		defer newPatch.Unpatch()
+		defer safeUnpatch(t, newPatch)
 
 		upPatch, err := mpatch.PatchMethod((*migrate.Migrate).Up, func(_ *migrate.Migrate) error {
 			return expectedErr
 		})
 		require.NoError(t, err, "Failed to patch Up method")
-		defer upPatch.Unpatch()
+		defer safeUnpatch(t, upPatch)
 
 		closePatch, err := mpatch.PatchMethod((*migrate.Migrate).Close, func(_ *migrate.Migrate) (error, error) {
 			return nil, nil
 		})
 		require.NoError(t, err, "Failed to patch Close method")
-		defer closePatch.Unpatch()
+		defer safeUnpatch(t, closePatch)
 
 		err = postgres.MigrateDSN(ctx, dsn, migrationsPath)
 
@@ -105,19 +116,19 @@ func TestMigrateDSN(t *testing.T) {
 			return nil, nil
 		})
 		require.NoError(t, err, "Failed to patch migrate.New")
-		defer newPatch.Unpatch()
+		defer safeUnpatch(t, newPatch)
 
 		upPatch, err := mpatch.PatchMethod((*migrate.Migrate).Up, func(_ *migrate.Migrate) error {
 			return migrate.ErrNoChange
 		})
 		require.NoError(t, err, "Failed to patch Up method")
-		defer upPatch.Unpatch()
+		defer safeUnpatch(t, upPatch)
 
 		closePatch, err := mpatch.PatchMethod((*migrate.Migrate).Close, func(_ *migrate.Migrate) (error, error) {
 			return nil, nil
 		})
 		require.NoError(t, err, "Failed to patch Close method")
-		defer closePatch.Unpatch()
+		defer safeUnpatch(t, closePatch)
 
 		err = postgres.MigrateDSN(ctx, dsn, migrationsPath)
 
