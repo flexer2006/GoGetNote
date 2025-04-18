@@ -13,6 +13,12 @@ import (
 	"gogetnote/pkg/logger"
 )
 
+const (
+	skipNoDatabaseMsg = "skipping test as no Postgres database is available"
+	skipConnFailedMsg = "skipping test as database connection failed"
+	testDSN           = "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
+)
+
 type MockPool struct {
 	mock.Mock
 }
@@ -30,18 +36,16 @@ func TestDatabaseClose(t *testing.T) {
 	mockPool := new(MockPool)
 	mockPool.On("Close").Return()
 
-	t.Run("When Close is called, pool's Close method should be called", func(t *testing.T) {
-		tempDSN := "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
-
-		tempPool, err := pgxpool.New(ctx, tempDSN)
+	t.Run("when Close is called, pool's Close method should be called", func(t *testing.T) {
+		tempPool, err := pgxpool.New(ctx, testDSN)
 		if err != nil {
-			t.Skip("Skipping test as no PostgreSQL database is available")
+			t.Skip(skipNoDatabaseMsg)
 		}
 		tempPool.Close()
 
-		realDB, err := postgres.New(ctx, tempDSN, 1, 2)
+		realDB, err := postgres.New(ctx, testDSN, 1, 2)
 		if err != nil {
-			t.Skip("Skipping test as database connection failed")
+			t.Skip(skipConnFailedMsg)
 		}
 
 		assert.NotPanics(t, func() {

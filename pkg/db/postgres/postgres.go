@@ -1,3 +1,5 @@
+// Package postgres предоставляет функциональность для работы с базой данных Postgres,
+// включая соединение, миграцию и выполнение запросов.
 package postgres
 
 import (
@@ -12,10 +14,12 @@ import (
 
 // Константы для сообщений logger.
 const (
-	LogConnecting        = "connecting to Postgres database"
-	LogConnected         = "successfully connected to Postgres"
-	LogClosing           = "closing Postgres connection pool"
-	LogMigrationsApplied = "database migrations successfully applied"
+	LogConnecting         = "connecting to Postgres database"
+	LogConnected          = "successfully connected to Postgres"
+	LogClosing            = "closing Postgres connection pool"
+	LogMigrationsApplied  = "database migrations successfully applied"
+	WarnMinConnOutOfRange = "MinConn значение выходит за пределы int32, используется значение по умолчанию"
+	WarnMaxConnOutOfRange = "MaxConn значение выходит за пределы int32, используется значение по умолчанию"
 )
 
 // Константы для сообщений об ошибках.
@@ -42,8 +46,17 @@ func New(ctx context.Context, dsn string, minConn, maxConn int) (*Database, erro
 		return nil, fmt.Errorf("%s: %w", ErrParseConfig, err)
 	}
 
-	poolCfg.MinConns = int32(minConn)
-	poolCfg.MaxConns = int32(maxConn)
+	if minConn > 0 && minConn <= (1<<31-1) {
+		poolCfg.MinConns = int32(minConn)
+	} else {
+		log.Warn(ctx, WarnMinConnOutOfRange)
+	}
+
+	if maxConn > 0 && maxConn <= (1<<31-1) {
+		poolCfg.MaxConns = int32(maxConn)
+	} else {
+		log.Warn(ctx, WarnMaxConnOutOfRange)
+	}
 
 	pool, err := pgxpool.NewWithConfig(ctx, poolCfg)
 	if err != nil {
@@ -74,5 +87,8 @@ func (db *Database) Close(ctx context.Context) {
 
 // Ping проверяет доступность базы данных.
 func (db *Database) Ping(ctx context.Context) error {
-	return db.pool.Ping(ctx)
+	if err := db.pool.Ping(ctx); err != nil {
+		return fmt.Errorf("%s: %w", ErrPingDatabase, err)
+	}
+	return nil
 }

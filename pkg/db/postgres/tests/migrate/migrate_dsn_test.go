@@ -15,12 +15,17 @@ import (
 	"github.com/undefinedlabs/go-mpatch"
 )
 
-// Вспомогательная функция для безопасной отмены патча
 func safeUnpatch(t *testing.T, p *mpatch.Patch) {
+	t.Helper()
 	if err := p.Unpatch(); err != nil {
 		t.Errorf("Failed to unpatch: %v", err)
 	}
 }
+
+var (
+	errMigrationCreationFailed = errors.New("migration creation failed")
+	errMigrationFailed         = errors.New("migration failed")
+)
 
 func TestMigrateDSN(t *testing.T) {
 	err := logger.InitGlobalLoggerWithLevel(logger.Development, "info")
@@ -61,16 +66,16 @@ func TestMigrateDSN(t *testing.T) {
 		defer safeUnpatch(t, closePatch)
 
 		err = postgres.MigrateDSN(ctx, dsn, migrationsPath)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		assert.True(t, upCalled, "Up method should have been called")
 		assert.True(t, closeCalled, "Close method should have been called")
 	})
 
 	t.Run("error creating migration instance", func(t *testing.T) {
-		expectedErr := errors.New("migration creation failed")
+		expectedErr := errMigrationCreationFailed
 
-		patch, err := mpatch.PatchMethod(migrate.New, func(source string, database string) (*migrate.Migrate, error) {
+		patch, err := mpatch.PatchMethod(migrate.New, func(_ string, _ string) (*migrate.Migrate, error) {
 			return nil, expectedErr
 		})
 		require.NoError(t, err, "Failed to patch migrate.New")
@@ -78,15 +83,15 @@ func TestMigrateDSN(t *testing.T) {
 
 		err = postgres.MigrateDSN(ctx, dsn, migrationsPath)
 
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), "failed to create migration instance")
 		assert.ErrorIs(t, err, expectedErr)
 	})
 
 	t.Run("error applying migrations", func(t *testing.T) {
-		expectedErr := errors.New("migration failed")
+		expectedErr := errMigrationFailed
 
-		newPatch, err := mpatch.PatchMethod(migrate.New, func(source, database string) (*migrate.Migrate, error) {
+		newPatch, err := mpatch.PatchMethod(migrate.New, func(_, _ string) (*migrate.Migrate, error) {
 			return nil, nil
 		})
 		require.NoError(t, err, "Failed to patch migrate.New")
@@ -106,13 +111,13 @@ func TestMigrateDSN(t *testing.T) {
 
 		err = postgres.MigrateDSN(ctx, dsn, migrationsPath)
 
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), "failed to apply migrations")
 		assert.ErrorIs(t, err, expectedErr)
 	})
 
 	t.Run("no changes needed case", func(t *testing.T) {
-		newPatch, err := mpatch.PatchMethod(migrate.New, func(source, database string) (*migrate.Migrate, error) {
+		newPatch, err := mpatch.PatchMethod(migrate.New, func(_, _ string) (*migrate.Migrate, error) {
 			return nil, nil
 		})
 		require.NoError(t, err, "Failed to patch migrate.New")
@@ -132,6 +137,6 @@ func TestMigrateDSN(t *testing.T) {
 
 		err = postgres.MigrateDSN(ctx, dsn, migrationsPath)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 }

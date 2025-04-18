@@ -12,6 +12,25 @@ import (
 	"gogetnote/pkg/logger"
 )
 
+const (
+	errMsgFailedToPingDB        = "failed to ping database"
+	errMsgFailedCreateConnPool  = "failed to create connection pool"
+	errMsgConnectionPoolOrPing  = "error should mention connection pool creation or ping failure"
+	errMsgFailedParseConnConfig = "failed to parse connection config"
+
+	errMsgDBShouldNotBeNil          = "database object should not be nil"
+	errMsgInvalidParamsWithoutPanic = "function should handle invalid connection parameters without panic"
+	errMsgShouldFailUnreachableHost = "should fail with unreachable host"
+	errMsgDBShouldBeNilOnError      = "database object should be nil on error"
+
+	validDSN       = "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
+	invalidDSN     = "not-a-valid-dsn"
+	unreachableDSN = "postgres://user:pass@nonexistenthost:5432/db?sslmode=disable"
+
+	skipMsgDBConnFailed         = "skipping test as database connection failed"
+	skipMsgPostgresNotAvailable = "skipping test as Postgres database is not available"
+)
+
 func TestDatabaseNew(t *testing.T) {
 	err := logger.InitGlobalLoggerWithLevel(logger.Development, "info")
 	require.NoError(t, err)
@@ -19,83 +38,77 @@ func TestDatabaseNew(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("Success - Valid connection parameters", func(t *testing.T) {
-		dsn := "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
 		minConn := 2
 		maxConn := 5
 
-		db, err := postgres.New(ctx, dsn, minConn, maxConn)
+		database, err := postgres.New(ctx, validDSN, minConn, maxConn)
 
-		if err != nil && strings.Contains(err.Error(), "failed to ping database") {
-			t.Skip("Skipping test as Postgres database is not available")
+		if err != nil && strings.Contains(err.Error(), errMsgFailedToPingDB) {
+			t.Skip(skipMsgPostgresNotAvailable)
 		}
 
 		require.NoError(t, err, "Should successfully connect to database")
-		require.NotNil(t, db, "Database object should not be nil")
+		require.NotNil(t, database, errMsgDBShouldNotBeNil)
 
-		poolResult := db.Pool()
+		poolResult := database.Pool()
 		assert.NotNil(t, poolResult, "Pool() should return a non-nil connection pool")
 
-		pingErr := db.Ping(ctx)
-		assert.NoError(t, pingErr, "Should be able to ping database after connection")
+		pingErr := database.Ping(ctx)
+		require.NoError(t, pingErr, "Should be able to ping database after connection")
 
-		db.Close(ctx)
+		database.Close(ctx)
 	})
 
 	t.Run("Error - Invalid DSN format", func(t *testing.T) {
-		invalidDSN := "not-a-valid-dsn"
 		minConn := 1
 		maxConn := 2
 
-		db, err := postgres.New(ctx, invalidDSN, minConn, maxConn)
+		database, err := postgres.New(ctx, invalidDSN, minConn, maxConn)
 
-		assert.Error(t, err, "Should fail with invalid DSN")
-		assert.Nil(t, db, "Database object should be nil on error")
-		assert.Contains(t, err.Error(), "failed to parse connection config",
+		require.Error(t, err, "Should fail with invalid DSN")
+		assert.Nil(t, database, errMsgDBShouldBeNilOnError)
+		assert.Contains(t, err.Error(), errMsgFailedParseConnConfig,
 			"Error should mention config parsing failure")
 	})
 
 	t.Run("Error - Valid DSN format but unreachable host", func(t *testing.T) {
-		unreachableDSN := "postgres://user:pass@nonexistenthost:5432/db?sslmode=disable"
 		minConn := 1
 		maxConn := 2
 
-		db, err := postgres.New(ctx, unreachableDSN, minConn, maxConn)
+		database, err := postgres.New(ctx, unreachableDSN, minConn, maxConn)
 
-		assert.Error(t, err, "Should fail with unreachable host")
-		assert.Nil(t, db, "Database object should be nil on error")
+		require.Error(t, err, errMsgShouldFailUnreachableHost)
+		assert.Nil(t, database, errMsgDBShouldBeNilOnError)
 
 		errorMessage := err.Error()
-		connectionFailureDetected := strings.Contains(errorMessage, "failed to create connection pool") ||
-			strings.Contains(errorMessage, "failed to ping database")
+		connectionFailureDetected := strings.Contains(errorMessage, errMsgFailedCreateConnPool) ||
+			strings.Contains(errorMessage, errMsgFailedToPingDB)
 
-		assert.True(t, connectionFailureDetected,
-			"Error should mention connection pool creation or ping failure")
+		assert.True(t, connectionFailureDetected, errMsgConnectionPoolOrPing)
 	})
 
 	t.Run("Connection parameters validation", func(t *testing.T) {
-		dsn := "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
 		invalidMinConn := -5
 		invalidMaxConn := 0
 
 		assert.NotPanics(t, func() {
-			db, _ := postgres.New(ctx, dsn, invalidMinConn, invalidMaxConn)
-			if db != nil {
-				db.Close(ctx)
+			database, _ := postgres.New(ctx, validDSN, invalidMinConn, invalidMaxConn)
+			if database != nil {
+				database.Close(ctx)
 			}
-		}, "Function should handle invalid connection parameters without panic")
+		}, errMsgInvalidParamsWithoutPanic)
 	})
 
 	t.Run("Min/Max connections set correctly", func(t *testing.T) {
-		dsn := "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
 		minConn := 3
 		maxConn := 10
 
-		db, err := postgres.New(ctx, dsn, minConn, maxConn)
+		database, err := postgres.New(ctx, validDSN, minConn, maxConn)
 		if err != nil {
-			t.Skip("Skipping test as database connection failed")
+			t.Skip(skipMsgDBConnFailed)
 		}
-		defer db.Close(ctx)
+		defer database.Close(ctx)
 
-		assert.NotNil(t, db.Pool(), "Pool should be initialized with specified min/max connections")
+		assert.NotNil(t, database.Pool(), "Pool should be initialized with specified min/max connections")
 	})
 }
