@@ -23,6 +23,7 @@ type Config struct {
 	Postgres PostgresConfig `yaml:"postgres"`
 	Logging  LoggingConfig  `yaml:"logging"`
 	Shutdown ShutdownConfig `yaml:"shutdown"`
+	GRPC     GRPCConfig     `yaml:"grpc"`
 }
 
 // Load загружает конфигурацию из переменных окружения.
