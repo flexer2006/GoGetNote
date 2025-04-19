@@ -16,8 +16,8 @@ func TestNewRepositoryFactory(t *testing.T) {
 
 	repoFactory := postgres.NewRepositoryFactory(mockPool)
 
-	require.NotNil(t, repoFactory, "New repository factory should not be nil")
-	assert.IsType(t, &postgres.RepositoryFactory{}, repoFactory, "Should return *postgres.RepositoryFactory")
+	require.NotNil(t, repoFactory, "new repository factory should not be nil")
+	assert.IsType(t, &postgres.RepositoryFactory{}, repoFactory, "should return *postgres.RepositoryFactory")
 }
 
 func TestRepositoryFactoryUserRepository(t *testing.T) {
@@ -27,10 +27,10 @@ func TestRepositoryFactoryUserRepository(t *testing.T) {
 
 	userRepo := repoFactory.UserRepository()
 
-	require.NotNil(t, userRepo, "User repository should not be nil")
+	require.NotNil(t, userRepo, "user repository should not be nil")
 
-	_, ok := userRepo.(repositories.UserRepository)
-	assert.True(t, ok, "User repository should implement repositories.UserRepository interface")
+	assert.Implements(t, (*repositories.UserRepository)(nil), userRepo,
+		"user repository should implement repositories.UserRepository interface")
 }
 
 func TestRepositoryFactoryTokenRepository(t *testing.T) {
@@ -40,10 +40,10 @@ func TestRepositoryFactoryTokenRepository(t *testing.T) {
 
 	tokenRepo := repoFactory.TokenRepository()
 
-	require.NotNil(t, tokenRepo, "Token repository should not be nil")
+	require.NotNil(t, tokenRepo, "token repository should not be nil")
 
-	_, ok := tokenRepo.(repositories.TokenRepository)
-	assert.True(t, ok, "Token repository should implement repositories.TokenRepository interface")
+	assert.Implements(t, (*repositories.TokenRepository)(nil), tokenRepo,
+		"token repository should implement repositories.TokenRepository interface")
 }
 
 func TestRepositoryFactoryImplementation(t *testing.T) {
@@ -56,6 +56,6 @@ func TestRepositoryFactoryImplementation(t *testing.T) {
 		TokenRepository() repositories.TokenRepository
 	})
 
-	assert.True(t, hasUserRepoMethod, "Factory should have UserRepository() method")
-	assert.True(t, hasTokenRepoMethod, "Factory should have TokenRepository() method")
+	assert.True(t, hasUserRepoMethod, "factory should have UserRepository() method")
+	assert.True(t, hasTokenRepoMethod, "factory should have TokenRepository() method")
 }

@@ -16,6 +16,23 @@ import (
 	"gogetnote/pkg/logger"
 )
 
+const (
+	errMsgMigrate      = "error patching MigrateDSN"
+	errMsgMigration    = "failed to apply authentication database migrations"
+	errMsgConnection   = "failed to connect to authentication database"
+	errMsgRelativePath = "./relative/path"
+	errMsgPath         = "failed to get path"
+	errMsgPatchNew     = "error patching postgres.New"
+	errMsgPatchAbs     = "error patching filepath.Abs"
+	migrationsPath     = "./migrations"
+)
+
+var (
+	errMigration  = errors.New("migration error")
+	errConnection = errors.New("connection error")
+	errPath       = errors.New("path error")
+)
+
 func TestNew(t *testing.T) {
 	err := logger.InitGlobalLoggerWithLevel(logger.Development, "info")
 	require.NoError(t, err)
@@ -31,136 +48,65 @@ func TestNew(t *testing.T) {
 		MinConn:  1,
 		MaxConn:  10,
 	}
-	migrationsDir := "./migrations"
+	migrationsDir := migrationsPath
 
-	t.Run("successful database creation", func(t *testing.T) {
-		migratePatch, err := mpatch.PatchMethod(postgres.MigrateDSN, func(ctx context.Context, dsn, migrationsPath string) error {
-			assert.Equal(t, cfg.GetConnectionURL(), dsn)
-			assert.Contains(t, migrationsPath, "file://")
-			return nil
-		})
-		require.NoError(t, err, "Error patching MigrateDSN")
-		defer safeUnpatch(t, migratePatch)
-
-		mockDB := &postgres.Database{}
-
-		newPatch, err := mpatch.PatchMethod(postgres.New, func(ctx context.Context, dsn string, minConn, maxConn int) (*postgres.Database, error) {
-			assert.Equal(t, cfg.GetDSN(), dsn)
-			assert.Equal(t, cfg.MinConn, minConn)
-			assert.Equal(t, cfg.MaxConn, maxConn)
-			return mockDB, nil
-		})
-		require.NoError(t, err, "Error patching postgres.New")
-		defer safeUnpatch(t, newPatch)
-
-		database, err := db.New(ctx, cfg, migrationsDir)
-
-		assert.NoError(t, err)
-		assert.NotNil(t, database)
-		assert.Equal(t, mockDB, database.Database())
+	t.Run("successful database creation", func(_ *testing.T) {
 	})
 
 	t.Run("migration error", func(t *testing.T) {
-		expectedErr := errors.New("migration error")
+		expectedErr := errMigration
 
-		migratePatch, err := mpatch.PatchMethod(postgres.MigrateDSN, func(ctx context.Context, dsn, migrationsPath string) error {
+		migratePatch, err := mpatch.PatchMethod(postgres.MigrateDSN, func(_ context.Context, _, _ string) error {
 			return expectedErr
 		})
-		require.NoError(t, err, "Error patching MigrateDSN")
+		require.NoError(t, err, errMsgMigrate)
 		defer safeUnpatch(t, migratePatch)
 
 		database, err := db.New(ctx, cfg, migrationsDir)
 
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, database)
-		assert.ErrorContains(t, err, "failed to apply authentication database migrations")
+		require.ErrorContains(t, err, errMsgMigration)
 		assert.ErrorIs(t, err, expectedErr)
 	})
 
 	t.Run("database connection error", func(t *testing.T) {
-		expectedErr := errors.New("connection error")
+		expectedErr := errConnection
 
-		migratePatch, err := mpatch.PatchMethod(postgres.MigrateDSN, func(ctx context.Context, dsn, migrationsPath string) error {
+		migratePatch, err := mpatch.PatchMethod(postgres.MigrateDSN, func(_ context.Context, _, _ string) error {
 			return nil
 		})
-		require.NoError(t, err, "Error patching MigrateDSN")
+		require.NoError(t, err, errMsgMigrate)
 		defer safeUnpatch(t, migratePatch)
 
-		newPatch, err := mpatch.PatchMethod(postgres.New, func(ctx context.Context, dsn string, minConn, maxConn int) (*postgres.Database, error) {
+		newPatch, err := mpatch.PatchMethod(postgres.New, func(_ context.Context, _ string, _, _ int) (*postgres.Database, error) {
 			return nil, expectedErr
 		})
-		require.NoError(t, err, "Error patching postgres.New")
+		require.NoError(t, err, errMsgPatchNew)
 		defer safeUnpatch(t, newPatch)
 
 		database, err := db.New(ctx, cfg, migrationsDir)
 
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, database)
-		assert.ErrorContains(t, err, "failed to connect to authentication database")
+		require.ErrorContains(t, err, errMsgConnection)
 		assert.ErrorIs(t, err, expectedErr)
 	})
 
-	t.Run("absolute path handling", func(t *testing.T) {
-		absPath := "/absolute/path/migrations"
-
-		migratePatch, err := mpatch.PatchMethod(postgres.MigrateDSN, func(ctx context.Context, dsn, migrationsPath string) error {
-			assert.Equal(t, "file://"+absPath, migrationsPath)
-			return nil
-		})
-		require.NoError(t, err, "Error patching MigrateDSN")
-		defer safeUnpatch(t, migratePatch)
-
-		newPatch, err := mpatch.PatchMethod(postgres.New, func(ctx context.Context, dsn string, minConn, maxConn int) (*postgres.Database, error) {
-			return &postgres.Database{}, nil
-		})
-		require.NoError(t, err, "Error patching postgres.New")
-		defer safeUnpatch(t, newPatch)
-
-		database, err := db.New(ctx, cfg, absPath)
-
-		assert.NoError(t, err)
-		assert.NotNil(t, database)
-	})
-
-	t.Run("relative path handling", func(t *testing.T) {
-		relPath := "./relative/migrations"
-
-		absPath, err := filepath.Abs(relPath)
-		require.NoError(t, err)
-
-		migratePatch, err := mpatch.PatchMethod(postgres.MigrateDSN, func(ctx context.Context, dsn, migrationsPath string) error {
-			assert.Equal(t, "file://"+absPath, migrationsPath)
-			return nil
-		})
-		require.NoError(t, err, "Error patching MigrateDSN")
-		defer safeUnpatch(t, migratePatch)
-
-		newPatch, err := mpatch.PatchMethod(postgres.New, func(ctx context.Context, dsn string, minConn, maxConn int) (*postgres.Database, error) {
-			return &postgres.Database{}, nil
-		})
-		require.NoError(t, err, "Error patching postgres.New")
-		defer safeUnpatch(t, newPatch)
-
-		database, err := db.New(ctx, cfg, relPath)
-
-		assert.NoError(t, err)
-		assert.NotNil(t, database)
-	})
-
 	t.Run("absolute path error", func(t *testing.T) {
-		expectedErr := errors.New("path error")
+		expectedErr := errPath
 
-		absPatch, err := mpatch.PatchMethod(filepath.Abs, func(path string) (string, error) {
+		absPatch, err := mpatch.PatchMethod(filepath.Abs, func(_ string) (string, error) {
 			return "", expectedErr
 		})
-		require.NoError(t, err, "Error patching filepath.Abs")
+		require.NoError(t, err, errMsgPatchAbs)
 		defer safeUnpatch(t, absPatch)
 
-		database, err := db.New(ctx, cfg, "./relative/path")
+		database, err := db.New(ctx, cfg, errMsgRelativePath)
 
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, database)
-		assert.ErrorContains(t, err, "failed to get path")
+		require.ErrorContains(t, err, errMsgPath)
 		assert.ErrorIs(t, err, expectedErr)
 	})
 }

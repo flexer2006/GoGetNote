@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"gogetnote/internal/auth/app"
-	"gogetnote/internal/auth/ports/api"
 )
 
 func TestNewAuthUseCase(t *testing.T) {
@@ -18,7 +17,4 @@ func TestNewAuthUseCase(t *testing.T) {
 	useCase := app.NewAuthUseCase(mockUserRepo, mockTokenRepo, mockPasswordSvc, mockTokenSvc)
 
 	assert.NotNil(t, useCase)
-
-	_, ok := useCase.(api.AuthUseCase)
-	assert.True(t, ok)
 }

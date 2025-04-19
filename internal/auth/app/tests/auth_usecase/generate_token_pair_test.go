@@ -15,6 +15,10 @@ import (
 	"gogetnote/internal/auth/domain/services"
 )
 
+var (
+	ErrDatabaseOperation = errors.New("database error")
+)
+
 func TestGenerateTokenPair(t *testing.T) {
 	userID := "test-user-id"
 	username := "testuser"
@@ -50,9 +54,9 @@ func TestGenerateTokenPair(t *testing.T) {
 		expectedErr error
 	}{
 		{
-			name: "Success - tokens generated and stored successfully",
+			name: "success - tokens generated and stored successfully",
 			user: testUser,
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(_ *mockUserRepository, mockTokenRepo *mockTokenRepository, _ *mockPasswordService, mockTokenSvc *mockTokenService) {
 				mockTokenSvc.On("GenerateAccessToken", mock.Anything, userID, username).
 					Return(accessToken, accessExpiry, nil).Once()
 
@@ -62,7 +66,7 @@ func TestGenerateTokenPair(t *testing.T) {
 				mockTokenRepo.On("StoreRefreshToken", mock.Anything, mock.MatchedBy(func(t *services.RefreshToken) bool {
 					return t.UserID == userID &&
 						t.Token == refreshToken &&
-						t.ExpiresAt == refreshExpiry &&
+						t.ExpiresAt.Equal(refreshExpiry) &&
 						!t.IsRevoked
 				})).Return(nil).Once()
 			},
@@ -70,32 +74,32 @@ func TestGenerateTokenPair(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
-			name: "Error - access token generation fails",
+			name: "error - access token generation fails",
 			user: testUser,
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(_ *mockUserRepository, _ *mockTokenRepository, _ *mockPasswordService, mockTokenSvc *mockTokenService) {
 				mockTokenSvc.On("GenerateAccessToken", mock.Anything, userID, username).
-					Return("", time.Time{}, errors.New("token generation failed")).Once()
+					Return("", time.Time{}, services.ErrTokenGenerationFailed).Once()
 			},
 			expectedRes: nil,
 			expectedErr: services.ErrTokenGenerationFailed,
 		},
 		{
-			name: "Error - refresh token generation fails",
+			name: "error - refresh token generation fails",
 			user: testUser,
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(_ *mockUserRepository, _ *mockTokenRepository, _ *mockPasswordService, mockTokenSvc *mockTokenService) {
 				mockTokenSvc.On("GenerateAccessToken", mock.Anything, userID, username).
 					Return(accessToken, accessExpiry, nil).Once()
 
 				mockTokenSvc.On("GenerateRefreshToken", mock.Anything, userID).
-					Return("", time.Time{}, errors.New("token generation failed")).Once()
+					Return("", time.Time{}, services.ErrTokenGenerationFailed).Once()
 			},
 			expectedRes: nil,
 			expectedErr: services.ErrTokenGenerationFailed,
 		},
 		{
-			name: "Error - storing refresh token fails",
+			name: "error - storing refresh token fails",
 			user: testUser,
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(_ *mockUserRepository, mockTokenRepo *mockTokenRepository, _ *mockPasswordService, mockTokenSvc *mockTokenService) {
 				mockTokenSvc.On("GenerateAccessToken", mock.Anything, userID, username).
 					Return(accessToken, accessExpiry, nil).Once()
 
@@ -103,56 +107,56 @@ func TestGenerateTokenPair(t *testing.T) {
 					Return(refreshToken, refreshExpiry, nil).Once()
 
 				mockTokenRepo.On("StoreRefreshToken", mock.Anything, mock.Anything).
-					Return(errors.New("database error")).Once()
+					Return(ErrDatabaseOperation).Once()
 			},
 			expectedRes: nil,
-			expectedErr: errors.New("database error"),
+			expectedErr: ErrDatabaseOperation,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, ttt := range tests {
+		t.Run(ttt.name, func(t *testing.T) {
 			mockUserRepo := new(mockUserRepository)
 			mockTokenRepo := new(mockTokenRepository)
 			mockPasswordSvc := new(mockPasswordService)
 			mockTokenSvc := new(mockTokenService)
 
-			tt.setupMocks(mockUserRepo, mockTokenRepo, mockPasswordSvc, mockTokenSvc)
+			ttt.setupMocks(mockUserRepo, mockTokenRepo, mockPasswordSvc, mockTokenSvc)
 
 			authUseCase := app.NewAuthUseCase(mockUserRepo, mockTokenRepo, mockPasswordSvc, mockTokenSvc)
 
 			ctx := context.Background()
 
-			if tt.expectedErr == nil {
-				mockUserRepo.On("FindByEmail", mock.Anything, tt.user.Email).
+			if ttt.expectedErr == nil {
+				mockUserRepo.On("FindByEmail", mock.Anything, ttt.user.Email).
 					Return(nil, entities.ErrUserNotFound).Once()
 
 				mockPasswordSvc.On("Hash", mock.Anything, testPassword).
 					Return("hashed_password", nil).Once()
 
 				mockUserRepo.On("Create", mock.Anything, mock.Anything).
-					Return(tt.user, nil).Once()
+					Return(ttt.user, nil).Once()
 
-				tokenPair, err := authUseCase.Register(ctx, tt.user.Email, tt.user.Username, testPassword)
+				tokenPair, err := authUseCase.Register(ctx, ttt.user.Email, ttt.user.Username, testPassword)
 
 				require.NoError(t, err)
-				assert.Equal(t, tt.expectedRes.UserID, tokenPair.UserID)
-				assert.Equal(t, tt.expectedRes.Username, tokenPair.Username)
-				assert.Equal(t, tt.expectedRes.AccessToken, tokenPair.AccessToken)
-				assert.Equal(t, tt.expectedRes.RefreshToken, tokenPair.RefreshToken)
-				assert.Equal(t, tt.expectedRes.ExpiresAt, tokenPair.ExpiresAt)
+				assert.Equal(t, ttt.expectedRes.UserID, tokenPair.UserID)
+				assert.Equal(t, ttt.expectedRes.Username, tokenPair.Username)
+				assert.Equal(t, ttt.expectedRes.AccessToken, tokenPair.AccessToken)
+				assert.Equal(t, ttt.expectedRes.RefreshToken, tokenPair.RefreshToken)
+				assert.Equal(t, ttt.expectedRes.ExpiresAt, tokenPair.ExpiresAt)
 			} else {
-				mockUserRepo.On("FindByEmail", mock.Anything, tt.user.Email).
-					Return(tt.user, nil).Once()
+				mockUserRepo.On("FindByEmail", mock.Anything, ttt.user.Email).
+					Return(ttt.user, nil).Once()
 
-				mockPasswordSvc.On("Verify", mock.Anything, testPassword, tt.user.PasswordHash).
+				mockPasswordSvc.On("Verify", mock.Anything, testPassword, ttt.user.PasswordHash).
 					Return(true, nil).Once()
 
-				tokenPair, err := authUseCase.Login(ctx, tt.user.Email, testPassword)
+				tokenPair, err := authUseCase.Login(ctx, ttt.user.Email, testPassword)
 
 				require.Error(t, err)
 				if errors.Is(err, services.ErrTokenGenerationFailed) {
-					assert.ErrorIs(t, err, tt.expectedErr)
+					assert.ErrorIs(t, err, ttt.expectedErr)
 				}
 				assert.Nil(t, tokenPair)
 			}

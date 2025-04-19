@@ -13,7 +13,7 @@ import (
 	"gogetnote/pkg/logger"
 )
 
-// TokenRepository реализует интерфейс repositories.TokenRepository для работы с PostgreSQL.
+// TokenRepository реализует интерфейс repositories.TokenRepository для работы с Postgres.
 type TokenRepository struct {
 	pool PgxPoolInterface
 }
@@ -34,10 +34,10 @@ func (r *TokenRepository) FindByToken(ctx context.Context, token string) (*servi
     `
 
 	var refreshToken services.RefreshToken
-	var id string // UUID в формате строки
+	var idn string // UUID в формате строки
 
 	err := r.pool.QueryRow(ctx, query, token).Scan(
-		&id,
+		&idn,
 		&refreshToken.UserID,
 		&refreshToken.Token,
 		&refreshToken.ExpiresAt,
@@ -54,7 +54,7 @@ func (r *TokenRepository) FindByToken(ctx context.Context, token string) (*servi
 		return nil, fmt.Errorf("error querying refresh token: %w", err)
 	}
 
-	refreshToken.ID = id
+	refreshToken.ID = idn
 
 	return &refreshToken, nil
 }
@@ -152,10 +152,10 @@ func (r *TokenRepository) FindUserTokens(ctx context.Context, userID string) ([]
 
 	for rows.Next() {
 		var token services.RefreshToken
-		var id string
+		var idn string
 
 		err := rows.Scan(
-			&id,
+			&idn,
 			&token.UserID,
 			&token.Token,
 			&token.ExpiresAt,
@@ -168,7 +168,7 @@ func (r *TokenRepository) FindUserTokens(ctx context.Context, userID string) ([]
 			return nil, fmt.Errorf("error scanning token row: %w", err)
 		}
 
-		token.ID = id
+		token.ID = idn
 		tokens = append(tokens, &token)
 	}
 

@@ -16,6 +16,17 @@ import (
 	"gogetnote/pkg/logger"
 )
 
+var (
+	errDatabaseConnection = errors.New("database connection failed")
+	errScanningRow        = errors.New("incompatible types")
+)
+
+const (
+	errMsgQueryingUserTok  = "error querying user tokens"
+	errMsgScanningTokenRow = "error scanning token row"
+	errMsgScanningRow      = "error scanning row:"
+)
+
 func TestTokenRepository_FindUserTokens(t *testing.T) {
 	ctx := context.Background()
 	testLogger, err := logger.NewLogger(logger.Development, "debug")
@@ -42,7 +53,7 @@ func TestTokenRepository_FindUserTokens(t *testing.T) {
 		IsRevoked: true,
 	}
 
-	t.Run("Успешное получение токенов пользователя", func(t *testing.T) {
+	t.Run("successful receipt of user tokens", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
@@ -80,7 +91,7 @@ func TestTokenRepository_FindUserTokens(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("Пользователь без токенов", func(t *testing.T) {
+	t.Run("a user without tokens", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
@@ -102,34 +113,33 @@ func TestTokenRepository_FindUserTokens(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("Ошибка базы данных", func(t *testing.T) {
+	t.Run("database error", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
 
-		dbError := errors.New("database connection failed")
 		mock.ExpectQuery("SELECT id, user_id, token, expires_at, created_at, is_revoked").
 			WithArgs(userID).
-			WillReturnError(dbError)
+			WillReturnError(errDatabaseConnection)
 
 		repo := postgres.NewTokenRepository(mock)
 
 		tokens, err := repo.FindUserTokens(ctx, userID)
 
 		assert.Nil(t, tokens)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "error querying user tokens")
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), errMsgQueryingUserTok)
 
 		err = mock.ExpectationsWereMet()
 		require.NoError(t, err)
 	})
 
-	t.Run("Ошибка при сканировании строк", func(t *testing.T) {
+	t.Run("error when scanning strings", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
 
-		scanError := fmt.Errorf("error scanning row: incompatible types")
+		scanError := fmt.Errorf("%s %w", errMsgScanningRow, errScanningRow)
 
 		rows := pgxmock.NewRows([]string{"id", "user_id", "token", "expires_at", "created_at", "is_revoked"}).
 			AddRow(testToken1.ID, testToken1.UserID, testToken1.Token, testToken1.ExpiresAt, testToken1.CreatedAt, testToken1.IsRevoked).
@@ -144,14 +154,15 @@ func TestTokenRepository_FindUserTokens(t *testing.T) {
 		tokens, err := repo.FindUserTokens(ctx, userID)
 
 		assert.Nil(t, tokens)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "error scanning token row")
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), errMsgScanningTokenRow)
+		assert.Contains(t, err.Error(), errMsgScanningRow)
 
 		err = mock.ExpectationsWereMet()
 		require.NoError(t, err)
 	})
 
-	t.Run("Пустой ID пользователя", func(t *testing.T) {
+	t.Run("empty User ID", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()

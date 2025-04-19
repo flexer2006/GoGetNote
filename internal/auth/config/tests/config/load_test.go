@@ -12,6 +12,27 @@ import (
 	"gogetnote/pkg/logger"
 )
 
+const (
+	AuthPostgresHost = "AUTH_POSTGRES_HOST"
+	AuthPostgresPort = "AUTH_POSTGRES_PORT"
+	AuthPostgresUser = "AUTH_POSTGRES_USER"
+	//nolint:gosec
+	AuthPostgresPassword = "AUTH_POSTGRES_PASSWORD"
+	AuthPostgresDB       = "AUTH_POSTGRES_DB"
+	AuthPostgresMinConn  = "AUTH_POSTGRES_MIN_CONN"
+	AuthPostgresMaxConn  = "AUTH_POSTGRES_MAX_CONN"
+
+	AuthLoggerLevel = "AUTH_LOGGER_LEVEL"
+	AuthLoggerMode  = "AUTH_LOGGER_MODE"
+
+	AuthShutdownTimeout = "AUTH_GRACEFUL_SHUTDOWN_TIMEOUT"
+
+	//nolint:gosec
+	ExpectedPostgresDSN = "host=customhost port=5433 user=dbuser password=dbpass dbname=customdb sslmode=disable"
+	//nolint:gosec
+	ExpectedPostgresConnectURL = "postgres://dbuser:dbpass@customhost:5433/customdb?sslmode=disable"
+)
+
 func TestLoad(t *testing.T) {
 	err := logger.InitGlobalLoggerWithLevel(logger.Development, "info")
 	require.NoError(t, err)
@@ -20,25 +41,25 @@ func TestLoad(t *testing.T) {
 
 	t.Run("successfully loads config from environment", func(t *testing.T) {
 		envVars := map[string]string{
-			"AUTH_POSTGRES_HOST":             "testhost",
-			"AUTH_POSTGRES_PORT":             "5555",
-			"AUTH_POSTGRES_USER":             "testuser",
-			"AUTH_POSTGRES_PASSWORD":         "testpass",
-			"AUTH_POSTGRES_DB":               "testdb",
-			"AUTH_POSTGRES_MIN_CONN":         "3",
-			"AUTH_POSTGRES_MAX_CONN":         "20",
-			"AUTH_LOGGER_LEVEL":              "debug",
-			"AUTH_LOGGER_MODE":               "production",
-			"AUTH_GRACEFUL_SHUTDOWN_TIMEOUT": "10",
+			AuthPostgresHost:     "testhost",
+			AuthPostgresPort:     "5555",
+			AuthPostgresUser:     "testuser",
+			AuthPostgresPassword: "testpass",
+			AuthPostgresDB:       "testdb",
+			AuthPostgresMinConn:  "3",
+			AuthPostgresMaxConn:  "20",
+			AuthLoggerLevel:      "debug",
+			AuthLoggerMode:       "production",
+			AuthShutdownTimeout:  "10",
 		}
 
 		for k, v := range envVars {
-			os.Setenv(k, v)
+			require.NoError(t, os.Setenv(k, v))
 		}
 
 		defer func() {
 			for k := range envVars {
-				os.Unsetenv(k)
+				require.NoError(t, os.Unsetenv(k))
 			}
 		}()
 
@@ -64,13 +85,13 @@ func TestLoad(t *testing.T) {
 
 	t.Run("uses default values when environment variables not set", func(t *testing.T) {
 		envVars := []string{
-			"AUTH_POSTGRES_HOST", "AUTH_POSTGRES_PORT", "AUTH_POSTGRES_USER",
-			"AUTH_POSTGRES_PASSWORD", "AUTH_POSTGRES_DB", "AUTH_POSTGRES_MIN_CONN",
-			"AUTH_POSTGRES_MAX_CONN", "AUTH_LOGGER_LEVEL", "AUTH_LOGGER_MODE",
-			"AUTH_GRACEFUL_SHUTDOWN_TIMEOUT",
+			AuthPostgresHost, AuthPostgresPort, AuthPostgresUser,
+			AuthPostgresPassword, AuthPostgresDB, AuthPostgresMinConn,
+			AuthPostgresMaxConn, AuthLoggerLevel, AuthLoggerMode,
+			AuthShutdownTimeout,
 		}
 		for _, env := range envVars {
-			os.Unsetenv(env)
+			require.NoError(t, os.Unsetenv(env))
 		}
 
 		cfg, err := config.Load(ctx)
@@ -94,38 +115,37 @@ func TestLoad(t *testing.T) {
 	})
 
 	t.Run("handles error with invalid environment variable", func(t *testing.T) {
-		os.Setenv("AUTH_POSTGRES_PORT", "not_a_number")
-		defer os.Unsetenv("AUTH_POSTGRES_PORT")
+		require.NoError(t, os.Setenv(AuthPostgresPort, "not_a_number"))
+		defer func() {
+			require.NoError(t, os.Unsetenv(AuthPostgresPort))
+		}()
 
 		cfg, err := config.Load(ctx)
 
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), "invalid syntax")
 		assert.Nil(t, cfg)
 	})
 
 	t.Run("verifies DSN generation", func(t *testing.T) {
-		os.Setenv("AUTH_POSTGRES_HOST", "customhost")
-		os.Setenv("AUTH_POSTGRES_PORT", "5433")
-		os.Setenv("AUTH_POSTGRES_USER", "dbuser")
-		os.Setenv("AUTH_POSTGRES_PASSWORD", "dbpass")
-		os.Setenv("AUTH_POSTGRES_DB", "customdb")
+		require.NoError(t, os.Setenv(AuthPostgresHost, "customhost"))
+		require.NoError(t, os.Setenv(AuthPostgresPort, "5433"))
+		require.NoError(t, os.Setenv(AuthPostgresUser, "dbuser"))
+		require.NoError(t, os.Setenv(AuthPostgresPassword, "dbpass"))
+		require.NoError(t, os.Setenv(AuthPostgresDB, "customdb"))
 		defer func() {
-			os.Unsetenv("AUTH_POSTGRES_HOST")
-			os.Unsetenv("AUTH_POSTGRES_PORT")
-			os.Unsetenv("AUTH_POSTGRES_USER")
-			os.Unsetenv("AUTH_POSTGRES_PASSWORD")
-			os.Unsetenv("AUTH_POSTGRES_DB")
+			require.NoError(t, os.Unsetenv(AuthPostgresHost))
+			require.NoError(t, os.Unsetenv(AuthPostgresPort))
+			require.NoError(t, os.Unsetenv(AuthPostgresUser))
+			require.NoError(t, os.Unsetenv(AuthPostgresPassword))
+			require.NoError(t, os.Unsetenv(AuthPostgresDB))
 		}()
 
 		cfg, err := config.Load(ctx)
 		require.NoError(t, err)
 		require.NotNil(t, cfg)
 
-		expectedDSN := "host=customhost port=5433 user=dbuser password=dbpass dbname=customdb sslmode=disable"
-		assert.Equal(t, expectedDSN, cfg.Postgres.GetDSN())
-
-		expectedURL := "postgres://dbuser:dbpass@customhost:5433/customdb?sslmode=disable"
-		assert.Equal(t, expectedURL, cfg.Postgres.GetConnectionURL())
+		assert.Equal(t, ExpectedPostgresDSN, cfg.Postgres.GetDSN())
+		assert.Equal(t, ExpectedPostgresConnectURL, cfg.Postgres.GetConnectionURL())
 	})
 }

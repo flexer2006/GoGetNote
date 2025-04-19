@@ -15,6 +15,14 @@ import (
 	"gogetnote/pkg/logger"
 )
 
+const ErrMsgStoringRefreshTok = "error storing refresh token"
+
+var (
+	ErrDatabaseConnection       = errors.New("database connection failed")
+	ErrForeignKeyViolation      = errors.New("foreign key violation")
+	ErrCheckConstraintViolation = errors.New("check constraint violation")
+)
+
 func TestTokenRepository_StoreRefreshToken(t *testing.T) {
 	ctx := context.Background()
 	testLogger, err := logger.NewLogger(logger.Development, "debug")
@@ -28,7 +36,7 @@ func TestTokenRepository_StoreRefreshToken(t *testing.T) {
 		IsRevoked: false,
 	}
 
-	t.Run("Успешное сохранение токена", func(t *testing.T) {
+	t.Run("successful token saving", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
@@ -47,28 +55,27 @@ func TestTokenRepository_StoreRefreshToken(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("Ошибка базы данных", func(t *testing.T) {
+	t.Run("database error", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
 
-		dbError := errors.New("database connection failed")
 		mock.ExpectExec("INSERT INTO refresh_tokens").
 			WithArgs(testToken.UserID, testToken.Token, testToken.ExpiresAt, testToken.IsRevoked).
-			WillReturnError(dbError)
+			WillReturnError(ErrDatabaseConnection)
 
 		repo := postgres.NewTokenRepository(mock)
 
 		err = repo.StoreRefreshToken(ctx, testToken)
 
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "error storing refresh token")
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), ErrMsgStoringRefreshTok)
 
 		err = mock.ExpectationsWereMet()
 		require.NoError(t, err)
 	})
 
-	t.Run("Пустой ID пользователя", func(t *testing.T) {
+	t.Run("empty User ID", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
@@ -82,21 +89,20 @@ func TestTokenRepository_StoreRefreshToken(t *testing.T) {
 
 		mock.ExpectExec("INSERT INTO refresh_tokens").
 			WithArgs(tokenWithEmptyUserID.UserID, tokenWithEmptyUserID.Token, tokenWithEmptyUserID.ExpiresAt, tokenWithEmptyUserID.IsRevoked).
-			WillReturnError(errors.New("foreign key violation"))
+			WillReturnError(ErrForeignKeyViolation)
 
 		repo := postgres.NewTokenRepository(mock)
 
 		err = repo.StoreRefreshToken(ctx, tokenWithEmptyUserID)
 
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "error storing refresh token")
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), ErrMsgStoringRefreshTok)
 
 		err = mock.ExpectationsWereMet()
 		require.NoError(t, err)
 	})
 
-	t.Run("Пустое значение токена", func(t *testing.T) {
-
+	t.Run("empty token value", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
@@ -110,14 +116,14 @@ func TestTokenRepository_StoreRefreshToken(t *testing.T) {
 
 		mock.ExpectExec("INSERT INTO refresh_tokens").
 			WithArgs(tokenWithEmptyValue.UserID, tokenWithEmptyValue.Token, tokenWithEmptyValue.ExpiresAt, tokenWithEmptyValue.IsRevoked).
-			WillReturnError(errors.New("check constraint violation"))
+			WillReturnError(ErrCheckConstraintViolation)
 
 		repo := postgres.NewTokenRepository(mock)
 
 		err = repo.StoreRefreshToken(ctx, tokenWithEmptyValue)
 
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "error storing refresh token")
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), ErrMsgStoringRefreshTok)
 
 		err = mock.ExpectationsWereMet()
 		require.NoError(t, err)

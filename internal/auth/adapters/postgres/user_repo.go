@@ -1,3 +1,5 @@
+// Package postgres предоставляет реализацию репозиториев для работы с базой данных Postgres.
+// Он содержит функции и структуры для выполнения CRUD операций над сущностями аутентификации.
 package postgres
 
 import (
@@ -15,6 +17,23 @@ import (
 	"gogetnote/pkg/logger"
 )
 
+// Константы сообщений журнала и ошибок.
+const (
+	msgUserNotFound            = "user not found"
+	msgUserNotFoundForUpdate   = "user not found for update"
+	msgUserNotFoundForDeletion = "user not found for deletion"
+	msgErrorFindingUser        = "error finding user by "
+	msgErrorCreatingUser       = "error creating user"
+	msgErrorUpdatingUser       = "error updating user"
+	msgErrorDeletingUser       = "error deleting user"
+
+	errMsgQueryingUser = "error querying user by "
+	errMsgCreatingUser = "error creating user"
+	errMsgUpdatingUser = "error updating user"
+	errMsgDeletingUser = "error deleting user"
+)
+
+// PgxPoolInterface определяет интерфейс для работы с пулом соединений Postgres.
 type PgxPoolInterface interface {
 	QueryRow(ctx context.Context, query string, args ...interface{}) pgx.Row
 	Exec(ctx context.Context, query string, args ...interface{}) (pgconn.CommandTag, error)
@@ -33,18 +52,12 @@ func NewUserRepository(pool PgxPoolInterface) repositories.UserRepository {
 	return &UserRepository{pool: pool}
 }
 
-// FindByID находит пользователя по ID.
-func (r *UserRepository) FindByID(ctx context.Context, id string) (*entities.User, error) {
-	log := logger.Log(ctx).With(zap.String("repository", "user"), zap.String("method", "FindByID"))
-
-	query := `
-        SELECT id, email, username, password_hash, created_at, updated_at
-        FROM users
-        WHERE id = $1
-    `
+// findUser выполняет базовые операции поиска пользователя по условию.
+func (r *UserRepository) findUser(ctx context.Context, query string, fieldName string, fieldValue string, logMethod string) (*entities.User, error) {
+	log := logger.Log(ctx).With(zap.String("repository", "user"), zap.String("method", logMethod))
 
 	var user entities.User
-	err := r.pool.QueryRow(ctx, query, id).Scan(
+	err := r.pool.QueryRow(ctx, query, fieldValue).Scan(
 		&user.ID,
 		&user.Email,
 		&user.Username,
@@ -55,46 +68,34 @@ func (r *UserRepository) FindByID(ctx context.Context, id string) (*entities.Use
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			log.Debug(ctx, "user not found", zap.String("id", id))
+			log.Debug(ctx, msgUserNotFound, zap.String(fieldName, fieldValue))
 			return nil, entities.ErrUserNotFound
 		}
-		log.Error(ctx, "error finding user by id", zap.Error(err))
-		return nil, fmt.Errorf("error querying user by id: %w", err)
+		log.Error(ctx, msgErrorFindingUser+fieldName, zap.Error(err))
+		return nil, fmt.Errorf(errMsgQueryingUser+"%s: %w", fieldName, err)
 	}
 
 	return &user, nil
 }
 
+// FindByID находит пользователя по ID.
+func (r *UserRepository) FindByID(ctx context.Context, idn string) (*entities.User, error) {
+	query := `
+        SELECT id, email, username, password_hash, created_at, updated_at
+        FROM users
+        WHERE id = $1
+    `
+	return r.findUser(ctx, query, "id", idn, "FindByID")
+}
+
 // FindByEmail находит пользователя по email.
 func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*entities.User, error) {
-	log := logger.Log(ctx).With(zap.String("repository", "user"), zap.String("method", "FindByEmail"))
-
 	query := `
         SELECT id, email, username, password_hash, created_at, updated_at
         FROM users
         WHERE email = $1
     `
-
-	var user entities.User
-	err := r.pool.QueryRow(ctx, query, email).Scan(
-		&user.ID,
-		&user.Email,
-		&user.Username,
-		&user.PasswordHash,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-	)
-
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			log.Debug(ctx, "user not found", zap.String("email", email))
-			return nil, entities.ErrUserNotFound
-		}
-		log.Error(ctx, "error finding user by email", zap.Error(err))
-		return nil, fmt.Errorf("error querying user by email: %w", err)
-	}
-
-	return &user, nil
+	return r.findUser(ctx, query, "email", email, "FindByEmail")
 }
 
 // Create создает нового пользователя.
@@ -122,8 +123,8 @@ func (r *UserRepository) Create(ctx context.Context, user *entities.User) (*enti
 	)
 
 	if err != nil {
-		log.Error(ctx, "error creating user", zap.Error(err))
-		return nil, fmt.Errorf("error creating user: %w", err)
+		log.Error(ctx, msgErrorCreatingUser, zap.Error(err))
+		return nil, fmt.Errorf("%s: %w", errMsgCreatingUser, err)
 	}
 
 	return &createdUser, nil
@@ -160,18 +161,18 @@ func (r *UserRepository) Update(ctx context.Context, user *entities.User) (*enti
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			log.Debug(ctx, "user not found for update", zap.String("id", user.ID))
+			log.Debug(ctx, msgUserNotFoundForUpdate, zap.String("id", user.ID))
 			return nil, entities.ErrUserNotFound
 		}
-		log.Error(ctx, "error updating user", zap.Error(err))
-		return nil, fmt.Errorf("error updating user: %w", err)
+		log.Error(ctx, msgErrorUpdatingUser, zap.Error(err))
+		return nil, fmt.Errorf("%s: %w", errMsgUpdatingUser, err)
 	}
 
 	return &updatedUser, nil
 }
 
 // Delete удаляет пользователя по ID.
-func (r *UserRepository) Delete(ctx context.Context, id string) error {
+func (r *UserRepository) Delete(ctx context.Context, idn string) error {
 	log := logger.Log(ctx).With(zap.String("repository", "user"), zap.String("method", "Delete"))
 
 	query := `
@@ -179,14 +180,14 @@ func (r *UserRepository) Delete(ctx context.Context, id string) error {
         WHERE id = $1
     `
 
-	result, err := r.pool.Exec(ctx, query, id)
+	result, err := r.pool.Exec(ctx, query, idn)
 	if err != nil {
-		log.Error(ctx, "error deleting user", zap.Error(err))
-		return fmt.Errorf("error deleting user: %w", err)
+		log.Error(ctx, msgErrorDeletingUser, zap.Error(err))
+		return fmt.Errorf("%s: %w", errMsgDeletingUser, err)
 	}
 
 	if result.RowsAffected() == 0 {
-		log.Debug(ctx, "user not found for deletion", zap.String("id", id))
+		log.Debug(ctx, msgUserNotFoundForDeletion, zap.String("id", idn))
 		return entities.ErrUserNotFound
 	}
 

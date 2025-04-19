@@ -18,45 +18,45 @@ func TestValidatePassword(t *testing.T) {
 		wantErr  error
 	}{
 		{
-			name:     "Valid password with letters and digits",
+			name:     "valid password with letters and digits",
 			password: "password123",
 			wantErr:  nil,
 		},
 		{
-			name:     "Valid complex password",
+			name:     "valid complex password",
 			password: "P@ssw0rd!123",
 			wantErr:  nil,
 		},
 		{
-			name:     "Password too short",
+			name:     "password too short",
 			password: "pass12",
 			wantErr:  entities.ErrPasswordTooShort,
 		},
 		{
-			name:     "Password without letters",
+			name:     "password without letters",
 			password: "12345678",
 			wantErr:  entities.ErrPasswordTooWeak,
 		},
 		{
-			name:     "Password without digits",
+			name:     "password without digits",
 			password: "passwordonly",
 			wantErr:  entities.ErrPasswordTooWeak,
 		},
 		{
-			name:     "Empty password",
+			name:     "empty password",
 			password: "",
 			wantErr:  entities.ErrPasswordTooShort,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := validatePassword(tt.password)
+	for _, ttt := range tests {
+		t.Run(ttt.name, func(t *testing.T) {
+			err := validatePassword(ttt.password)
 
-			if tt.wantErr == nil {
+			if ttt.wantErr == nil {
 				assert.NoError(t, err)
 			} else {
-				assert.ErrorIs(t, err, tt.wantErr)
+				assert.ErrorIs(t, err, ttt.wantErr)
 			}
 		})
 	}

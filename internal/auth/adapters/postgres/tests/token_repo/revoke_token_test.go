@@ -2,7 +2,6 @@ package tokenrepo_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/pashagolub/pgxmock/v4"
@@ -14,6 +13,8 @@ import (
 	"gogetnote/pkg/logger"
 )
 
+const ErrMsgRevokingRefreshToken = "error revoking refresh token"
+
 func TestTokenRepository_RevokeToken(t *testing.T) {
 	ctx := context.Background()
 	testLogger, err := logger.NewLogger(logger.Development, "debug")
@@ -22,8 +23,7 @@ func TestTokenRepository_RevokeToken(t *testing.T) {
 
 	const tokenValue = "test-token-value"
 
-	t.Run("Успешная отмена токена", func(t *testing.T) {
-
+	t.Run("successful token cancellation", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
@@ -42,8 +42,7 @@ func TestTokenRepository_RevokeToken(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("Токен не найден", func(t *testing.T) {
-
+	t.Run("the token was not found", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
@@ -56,35 +55,34 @@ func TestTokenRepository_RevokeToken(t *testing.T) {
 
 		err = repo.RevokeToken(ctx, tokenValue)
 
-		assert.ErrorIs(t, err, services.ErrInvalidRefreshToken)
+		require.ErrorIs(t, err, services.ErrInvalidRefreshToken)
 
 		err = mock.ExpectationsWereMet()
 		require.NoError(t, err)
 	})
 
-	t.Run("Ошибка базы данных", func(t *testing.T) {
+	t.Run("database error", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
 
-		dbError := errors.New("database connection failed")
 		mock.ExpectExec("UPDATE refresh_tokens").
 			WithArgs(tokenValue).
-			WillReturnError(dbError)
+			WillReturnError(ErrDatabaseConnection)
 
 		repo := postgres.NewTokenRepository(mock)
 
-		// Вызываем тестируемый метод
 		err = repo.RevokeToken(ctx, tokenValue)
 
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "error revoking refresh token")
+		require.Error(t, err)
+
+		assert.Contains(t, err.Error(), ErrMsgRevokingRefreshToken)
 
 		err = mock.ExpectationsWereMet()
 		require.NoError(t, err)
 	})
 
-	t.Run("Пустой токен", func(t *testing.T) {
+	t.Run("an empty token", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
@@ -97,7 +95,7 @@ func TestTokenRepository_RevokeToken(t *testing.T) {
 
 		err = repo.RevokeToken(ctx, "")
 
-		assert.ErrorIs(t, err, services.ErrInvalidRefreshToken)
+		require.ErrorIs(t, err, services.ErrInvalidRefreshToken)
 
 		err = mock.ExpectationsWereMet()
 		require.NoError(t, err)

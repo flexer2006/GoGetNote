@@ -1,3 +1,4 @@
+// Package services содержит интерфейсы сервисов для аутентификации и управления пользователями.
 package services
 
 import "context"

@@ -15,6 +15,12 @@ import (
 	"gogetnote/internal/auth/domain/services"
 )
 
+var (
+	ErrDatabaseConnection   = errors.New("database connection error")
+	ErrPasswordVerification = errors.New("password verification error")
+	ErrTokenGeneration      = errors.New("token generation failed")
+)
+
 func TestLogin(t *testing.T) {
 	testEmail := "test@example.com"
 	testPassword := "password123"
@@ -56,7 +62,7 @@ func TestLogin(t *testing.T) {
 		errorContext string
 	}{
 		{
-			name:     "Success - user logged in successfully",
+			name:     "success - user logged in successfully",
 			email:    testEmail,
 			password: testPassword,
 			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
@@ -74,10 +80,10 @@ func TestLogin(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
-			name:     "Error - user not found",
+			name:     "error - user not found",
 			email:    "nonexistent@example.com",
 			password: testPassword,
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(mockUserRepo *mockUserRepository, _ *mockTokenRepository, _ *mockPasswordService, _ *mockTokenService) {
 				mockUserRepo.On("FindByEmail", mock.Anything, "nonexistent@example.com").
 					Return(nil, entities.ErrUserNotFound).Once()
 			},
@@ -86,35 +92,35 @@ func TestLogin(t *testing.T) {
 			errorContext: "invalid credentials",
 		},
 		{
-			name:     "Error - database error finding user",
+			name:     "error - database error finding user",
 			email:    testEmail,
 			password: testPassword,
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(mockUserRepo *mockUserRepository, _ *mockTokenRepository, _ *mockPasswordService, _ *mockTokenService) {
 				mockUserRepo.On("FindByEmail", mock.Anything, testEmail).
-					Return(nil, errors.New("database connection error")).Once()
+					Return(nil, ErrDatabaseConnection).Once()
 			},
 			expectedRes:  nil,
-			expectedErr:  errors.New("database connection error"),
+			expectedErr:  ErrDatabaseConnection,
 			errorContext: "finding user",
 		},
 		{
-			name:     "Error - password verification error",
+			name:     "error - password verification error",
 			email:    testEmail,
 			password: testPassword,
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(mockUserRepo *mockUserRepository, _ *mockTokenRepository, mockPasswordSvc *mockPasswordService, _ *mockTokenService) {
 				mockUserRepo.On("FindByEmail", mock.Anything, testEmail).Return(testUser, nil).Once()
 				mockPasswordSvc.On("Verify", mock.Anything, testPassword, hashedPassword).
-					Return(false, errors.New("password verification error")).Once()
+					Return(false, ErrPasswordVerification).Once()
 			},
 			expectedRes:  nil,
-			expectedErr:  errors.New("password verification error"),
+			expectedErr:  ErrPasswordVerification,
 			errorContext: "verifying password",
 		},
 		{
-			name:     "Error - invalid password",
+			name:     "error - invalid password",
 			email:    testEmail,
 			password: "wrongpassword",
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(mockUserRepo *mockUserRepository, _ *mockTokenRepository, mockPasswordSvc *mockPasswordService, _ *mockTokenService) {
 				mockUserRepo.On("FindByEmail", mock.Anything, testEmail).Return(testUser, nil).Once()
 				mockPasswordSvc.On("Verify", mock.Anything, "wrongpassword", hashedPassword).
 					Return(false, nil).Once()
@@ -124,52 +130,52 @@ func TestLogin(t *testing.T) {
 			errorContext: "invalid credentials",
 		},
 		{
-			name:     "Error - token generation fails",
+			name:     "error - token generation fails",
 			email:    testEmail,
 			password: testPassword,
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(mockUserRepo *mockUserRepository, _ *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
 				mockUserRepo.On("FindByEmail", mock.Anything, testEmail).Return(testUser, nil).Once()
 				mockPasswordSvc.On("Verify", mock.Anything, testPassword, hashedPassword).Return(true, nil).Once()
 				mockTokenSvc.On("GenerateAccessToken", mock.Anything, userID, username).
-					Return("", time.Time{}, errors.New("token generation failed")).Once()
+					Return("", time.Time{}, ErrTokenGeneration).Once()
 			},
 			expectedRes:  nil,
-			expectedErr:  errors.New("token generation failed"),
+			expectedErr:  ErrTokenGeneration,
 			errorContext: "generating tokens",
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, ttt := range tests {
+		t.Run(ttt.name, func(t *testing.T) {
 			mockUserRepo := new(mockUserRepository)
 			mockTokenRepo := new(mockTokenRepository)
 			mockPasswordSvc := new(mockPasswordService)
 			mockTokenSvc := new(mockTokenService)
 
-			tt.setupMocks(mockUserRepo, mockTokenRepo, mockPasswordSvc, mockTokenSvc)
+			ttt.setupMocks(mockUserRepo, mockTokenRepo, mockPasswordSvc, mockTokenSvc)
 
 			authUseCase := app.NewAuthUseCase(mockUserRepo, mockTokenRepo, mockPasswordSvc, mockTokenSvc)
 
 			ctx := context.Background()
-			tokenPair, err := authUseCase.Login(ctx, tt.email, tt.password)
+			tokenPair, err := authUseCase.Login(ctx, ttt.email, ttt.password)
 
-			if tt.expectedErr != nil {
+			if ttt.expectedErr != nil {
 				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.errorContext)
+				assert.Contains(t, err.Error(), ttt.errorContext)
 
 				if errors.Is(err, services.ErrInvalidCredentials) {
-					assert.ErrorIs(t, err, tt.expectedErr)
+					assert.ErrorIs(t, err, ttt.expectedErr)
 				}
 
 				assert.Nil(t, tokenPair)
 			} else {
 				require.NoError(t, err)
 				assert.NotNil(t, tokenPair)
-				assert.Equal(t, tt.expectedRes.UserID, tokenPair.UserID)
-				assert.Equal(t, tt.expectedRes.Username, tokenPair.Username)
-				assert.Equal(t, tt.expectedRes.AccessToken, tokenPair.AccessToken)
-				assert.Equal(t, tt.expectedRes.RefreshToken, tokenPair.RefreshToken)
-				assert.Equal(t, tt.expectedRes.ExpiresAt, tokenPair.ExpiresAt)
+				assert.Equal(t, ttt.expectedRes.UserID, tokenPair.UserID)
+				assert.Equal(t, ttt.expectedRes.Username, tokenPair.Username)
+				assert.Equal(t, ttt.expectedRes.AccessToken, tokenPair.AccessToken)
+				assert.Equal(t, ttt.expectedRes.RefreshToken, tokenPair.RefreshToken)
+				assert.Equal(t, ttt.expectedRes.ExpiresAt, tokenPair.ExpiresAt)
 			}
 
 			mockUserRepo.AssertExpectations(t)

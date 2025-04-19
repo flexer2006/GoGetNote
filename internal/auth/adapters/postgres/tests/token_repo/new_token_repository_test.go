@@ -11,6 +11,11 @@ import (
 	"gogetnote/internal/auth/ports/repositories"
 )
 
+const (
+	errRepositoryNil  = "repository should not be nil"
+	errRepositoryType = "repository should be of type *postgres.TokenRepository"
+)
+
 func TestNewTokenRepository(t *testing.T) {
 	mockPool := &pgxpool.Pool{}
 
@@ -20,31 +25,28 @@ func TestNewTokenRepository(t *testing.T) {
 		want repositories.TokenRepository
 	}{
 		{
-			name: "Creates repository with valid pool",
+			name: "creates repository with valid pool",
 			pool: mockPool,
 			want: &postgres.TokenRepository{},
 		},
 		{
-			name: "Creates repository with nil pool",
+			name: "creates repository with nil pool",
 			pool: nil,
 			want: &postgres.TokenRepository{},
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			repo := postgres.NewTokenRepository(tt.pool)
+	for _, ttt := range tests {
+		t.Run(ttt.name, func(t *testing.T) {
+			repo := postgres.NewTokenRepository(ttt.pool)
 
-			require.NotNil(t, repo, "Repository should not be nil")
+			require.NotNil(t, repo, errRepositoryNil)
 
-			_, ok := repo.(repositories.TokenRepository)
-			assert.True(t, ok, "Repository should implement TokenRepository interface")
-
-			assert.IsType(t, tt.want, repo, "Repository should be of type *postgres.TokenRepository")
+			assert.IsType(t, ttt.want, repo, errRepositoryType)
 		})
 	}
 }
 
-func TestTokenRepositoryImplementsInterface(t *testing.T) {
+func TestTokenRepositoryImplementsInterface(_ *testing.T) {
 	var _ repositories.TokenRepository = (*postgres.TokenRepository)(nil)
 }

@@ -2,7 +2,6 @@ package tokenrepo_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/pashagolub/pgxmock/v4"
@@ -19,7 +18,7 @@ func TestTokenRepository_CleanupExpiredTokens(t *testing.T) {
 	require.NoError(t, err)
 	ctx = logger.NewContext(ctx, testLogger)
 
-	t.Run("Успешная очистка токенов", func(t *testing.T) {
+	t.Run("successful token clearing", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
@@ -37,7 +36,7 @@ func TestTokenRepository_CleanupExpiredTokens(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("Очистка без удаления токенов", func(t *testing.T) {
+	t.Run("clearing without deleting tokens", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
@@ -55,20 +54,19 @@ func TestTokenRepository_CleanupExpiredTokens(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("Ошибка базы данных", func(t *testing.T) {
+	t.Run("database error", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
 
-		dbError := errors.New("database connection failed")
 		mock.ExpectExec("DELETE FROM refresh_tokens").
-			WillReturnError(dbError)
+			WillReturnError(ErrDatabaseConnection)
 
 		repo := postgres.NewTokenRepository(mock)
 
 		err = repo.CleanupExpiredTokens(ctx)
 
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), "error cleaning up expired tokens")
 
 		err = mock.ExpectationsWereMet()

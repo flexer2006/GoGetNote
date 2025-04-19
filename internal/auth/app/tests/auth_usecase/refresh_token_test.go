@@ -15,6 +15,12 @@ import (
 	"gogetnote/internal/auth/domain/services"
 )
 
+var (
+	ErrTokenNotFound         = errors.New("token not found")
+	ErrDatabase              = errors.New("database error")
+	ErrTokenGenerationFailed = errors.New("token generation failed")
+)
+
 func TestRefreshTokens(t *testing.T) {
 	const (
 		userID          = "user-123"
@@ -72,9 +78,9 @@ func TestRefreshTokens(t *testing.T) {
 		errorContext string
 	}{
 		{
-			name:         "Success - token refreshed successfully",
+			name:         "success - token refreshed successfully",
 			refreshToken: refreshToken,
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, _ *mockPasswordService, mockTokenSvc *mockTokenService) {
 				mockTokenRepo.On("FindByToken", mock.Anything, refreshToken).Return(testTokenObj, nil).Once()
 				mockUserRepo.On("FindByID", mock.Anything, userID).Return(testUser, nil).Once()
 				mockTokenRepo.On("RevokeToken", mock.Anything, refreshToken).Return(nil).Once()
@@ -90,20 +96,20 @@ func TestRefreshTokens(t *testing.T) {
 			expectedErr:  nil,
 		},
 		{
-			name:         "Error - invalid refresh token",
+			name:         "error - invalid refresh token",
 			refreshToken: "invalid-token",
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(_ *mockUserRepository, mockTokenRepo *mockTokenRepository, _ *mockPasswordService, _ *mockTokenService) {
 				mockTokenRepo.On("FindByToken", mock.Anything, "invalid-token").
-					Return(nil, errors.New("token not found")).Once()
+					Return(nil, ErrTokenNotFound).Once()
 			},
 			expectedPair: nil,
 			expectedErr:  services.ErrInvalidRefreshToken,
 			errorContext: "finding refresh token",
 		},
 		{
-			name:         "Error - revoked refresh token",
+			name:         "error - revoked refresh token",
 			refreshToken: "revoked-token-123",
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(_ *mockUserRepository, mockTokenRepo *mockTokenRepository, _ *mockPasswordService, _ *mockTokenService) {
 				mockTokenRepo.On("FindByToken", mock.Anything, "revoked-token-123").
 					Return(revokedTokenObj, nil).Once()
 			},
@@ -112,9 +118,9 @@ func TestRefreshTokens(t *testing.T) {
 			errorContext: "token revoked",
 		},
 		{
-			name:         "Error - user not found",
+			name:         "error - user not found",
 			refreshToken: refreshToken,
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, _ *mockPasswordService, _ *mockTokenService) {
 				mockTokenRepo.On("FindByToken", mock.Anything, refreshToken).
 					Return(testTokenObj, nil).Once()
 				mockUserRepo.On("FindByID", mock.Anything, userID).
@@ -125,24 +131,24 @@ func TestRefreshTokens(t *testing.T) {
 			errorContext: "finding user",
 		},
 		{
-			name:         "Error - cannot revoke old token",
+			name:         "error - cannot revoke old token",
 			refreshToken: refreshToken,
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, _ *mockPasswordService, _ *mockTokenService) {
 				mockTokenRepo.On("FindByToken", mock.Anything, refreshToken).
 					Return(testTokenObj, nil).Once()
 				mockUserRepo.On("FindByID", mock.Anything, userID).
 					Return(testUser, nil).Once()
 				mockTokenRepo.On("RevokeToken", mock.Anything, refreshToken).
-					Return(errors.New("database error")).Once()
+					Return(ErrDatabase).Once()
 			},
 			expectedPair: nil,
-			expectedErr:  errors.New("database error"),
+			expectedErr:  ErrDatabase,
 			errorContext: "revoking old token",
 		},
 		{
-			name:         "Error - cannot generate new tokens",
+			name:         "error - cannot generate new tokens",
 			refreshToken: refreshToken,
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, _ *mockPasswordService, mockTokenSvc *mockTokenService) {
 				mockTokenRepo.On("FindByToken", mock.Anything, refreshToken).
 					Return(testTokenObj, nil).Once()
 				mockUserRepo.On("FindByID", mock.Anything, userID).
@@ -150,7 +156,7 @@ func TestRefreshTokens(t *testing.T) {
 				mockTokenRepo.On("RevokeToken", mock.Anything, refreshToken).
 					Return(nil).Once()
 				mockTokenSvc.On("GenerateAccessToken", mock.Anything, userID, username).
-					Return("", time.Time{}, errors.New("token generation failed")).Once()
+					Return("", time.Time{}, ErrTokenGenerationFailed).Once()
 			},
 			expectedPair: nil,
 			expectedErr:  services.ErrTokenGenerationFailed,
@@ -158,40 +164,40 @@ func TestRefreshTokens(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, ttt := range tests {
+		t.Run(ttt.name, func(t *testing.T) {
 			mockUserRepo := new(mockUserRepository)
 			mockTokenRepo := new(mockTokenRepository)
 			mockPasswordSvc := new(mockPasswordService)
 			mockTokenSvc := new(mockTokenService)
 
-			tt.setupMocks(mockUserRepo, mockTokenRepo, mockPasswordSvc, mockTokenSvc)
+			ttt.setupMocks(mockUserRepo, mockTokenRepo, mockPasswordSvc, mockTokenSvc)
 
 			authUseCase := app.NewAuthUseCase(mockUserRepo, mockTokenRepo, mockPasswordSvc, mockTokenSvc)
 
 			ctx := context.Background()
-			tokenPair, err := authUseCase.RefreshTokens(ctx, tt.refreshToken)
+			tokenPair, err := authUseCase.RefreshTokens(ctx, ttt.refreshToken)
 
-			if tt.expectedErr != nil {
+			if ttt.expectedErr != nil {
 				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.errorContext)
+				assert.Contains(t, err.Error(), ttt.errorContext)
 
 				if errors.Is(err, services.ErrInvalidRefreshToken) ||
 					errors.Is(err, services.ErrRevokedRefreshToken) ||
 					errors.Is(err, entities.ErrUserNotFound) ||
 					errors.Is(err, services.ErrTokenGenerationFailed) {
-					assert.ErrorIs(t, err, tt.expectedErr)
+					require.ErrorIs(t, err, ttt.expectedErr)
 				}
 
 				assert.Nil(t, tokenPair)
 			} else {
 				require.NoError(t, err)
 				assert.NotNil(t, tokenPair)
-				assert.Equal(t, tt.expectedPair.UserID, tokenPair.UserID)
-				assert.Equal(t, tt.expectedPair.Username, tokenPair.Username)
-				assert.Equal(t, tt.expectedPair.AccessToken, tokenPair.AccessToken)
-				assert.Equal(t, tt.expectedPair.RefreshToken, tokenPair.RefreshToken)
-				assert.Equal(t, tt.expectedPair.ExpiresAt, tokenPair.ExpiresAt)
+				assert.Equal(t, ttt.expectedPair.UserID, tokenPair.UserID)
+				assert.Equal(t, ttt.expectedPair.Username, tokenPair.Username)
+				assert.Equal(t, ttt.expectedPair.AccessToken, tokenPair.AccessToken)
+				assert.Equal(t, ttt.expectedPair.RefreshToken, tokenPair.RefreshToken)
+				assert.Equal(t, ttt.expectedPair.ExpiresAt, tokenPair.ExpiresAt)
 			}
 
 			mockUserRepo.AssertExpectations(t)

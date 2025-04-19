@@ -6,7 +6,7 @@ import (
 	"gogetnote/internal/auth/ports/repositories"
 )
 
-// RepositoryFactory создает все необходимые репозитории для работы с PostgreSQL.
+// RepositoryFactory создает все необходимые репозитории для работы с Postgres.
 type RepositoryFactory struct {
 	userRepo  repositories.UserRepository
 	tokenRepo repositories.TokenRepository

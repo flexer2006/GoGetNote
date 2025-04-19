@@ -2,7 +2,6 @@ package tokenrepo_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/pashagolub/pgxmock/v4"
@@ -13,6 +12,10 @@ import (
 	"gogetnote/pkg/logger"
 )
 
+const (
+	errRevokingAllUserTokens = "error revoking all user tokens"
+)
+
 func TestTokenRepository_RevokeAllUserTokens(t *testing.T) {
 	ctx := context.Background()
 	testLogger, err := logger.NewLogger(logger.Development, "debug")
@@ -21,7 +24,7 @@ func TestTokenRepository_RevokeAllUserTokens(t *testing.T) {
 
 	const userID = "test-user-id"
 
-	t.Run("Успешная отмена всех токенов пользователя", func(t *testing.T) {
+	t.Run("successful cancellation of all user tokens", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
@@ -40,7 +43,7 @@ func TestTokenRepository_RevokeAllUserTokens(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("Отмена токенов - нет активных токенов", func(t *testing.T) {
+	t.Run("token cancellation - there are no active tokens", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
@@ -59,28 +62,27 @@ func TestTokenRepository_RevokeAllUserTokens(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("Ошибка базы данных", func(t *testing.T) {
+	t.Run("database error", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
 
-		dbError := errors.New("database connection failed")
 		mock.ExpectExec("UPDATE refresh_tokens").
 			WithArgs(userID).
-			WillReturnError(dbError)
+			WillReturnError(ErrDatabaseConnection)
 
 		repo := postgres.NewTokenRepository(mock)
 
 		err = repo.RevokeAllUserTokens(ctx, userID)
 
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "error revoking all user tokens")
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), errRevokingAllUserTokens)
 
 		err = mock.ExpectationsWereMet()
 		require.NoError(t, err)
 	})
 
-	t.Run("Пустой ID пользователя", func(t *testing.T) {
+	t.Run("empty User ID", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()

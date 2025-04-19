@@ -1,3 +1,4 @@
+// Package entities содержит основные сущности (entities) домена аутентификации и авторизации.
 package entities
 
 import (

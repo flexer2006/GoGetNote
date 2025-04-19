@@ -11,6 +11,11 @@ import (
 	"gogetnote/internal/auth/ports/repositories"
 )
 
+const (
+	errRepositoryShouldNotBeNil = "repository should not be nil"
+	errRepositoryShouldBeOfType = "repository should be of type *postgres.UserRepository"
+)
+
 func TestNewUserRepository(t *testing.T) {
 	mockPool := &pgxpool.Pool{}
 
@@ -20,32 +25,28 @@ func TestNewUserRepository(t *testing.T) {
 		want repositories.UserRepository
 	}{
 		{
-			name: "Creates repository with valid pool",
+			name: "creates repository with valid pool",
 			pool: mockPool,
 			want: &postgres.UserRepository{},
 		},
 		{
-			name: "Creates repository with nil pool",
+			name: "creates repository with nil pool",
 			pool: nil,
 			want: &postgres.UserRepository{},
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			repo := postgres.NewUserRepository(tt.pool)
+	for _, ttt := range tests {
+		t.Run(ttt.name, func(t *testing.T) {
+			repo := postgres.NewUserRepository(ttt.pool)
 
-			require.NotNil(t, repo, "Repository should not be nil")
+			require.NotNil(t, repo, errRepositoryShouldNotBeNil)
 
-			_, ok := repo.(repositories.UserRepository)
-			assert.True(t, ok, "Repository should implement UserRepository interface")
-
-			assert.IsType(t, tt.want, repo, "Repository should be of type *postgres.UserRepository")
-
+			assert.IsType(t, ttt.want, repo, errRepositoryShouldBeOfType)
 		})
 	}
 }
 
-func TestUserRepositoryImplementsInterface(t *testing.T) {
+func TestUserRepositoryImplementsInterface(_ *testing.T) {
 	var _ repositories.UserRepository = (*postgres.UserRepository)(nil)
 }

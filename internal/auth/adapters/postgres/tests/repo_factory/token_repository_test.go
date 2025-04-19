@@ -10,7 +10,6 @@ import (
 
 	"gogetnote/internal/auth/adapters/postgres"
 	"gogetnote/internal/auth/domain/services"
-	"gogetnote/internal/auth/ports/repositories"
 )
 
 func TestRepositoryFactory_TokenRepository(t *testing.T) {
@@ -23,16 +22,13 @@ func TestRepositoryFactory_TokenRepository(t *testing.T) {
 
 	require.NotNil(t, tokenRepo, "Token repository should not be nil")
 
-	_, ok := tokenRepo.(repositories.TokenRepository)
-	assert.True(t, ok, "Token repository should implement repositories.TokenRepository interface")
-
 	tokenRepo2 := repoFactory.TokenRepository()
 	assert.Same(t, tokenRepo, tokenRepo2, "Multiple calls should return the same repository instance")
 
-	_, ok = tokenRepo.(*postgres.TokenRepository)
+	_, ok := tokenRepo.(*postgres.TokenRepository)
 	assert.True(t, ok, "Token repository should be of type *postgres.TokenRepository")
 
-	t.Run("Interface implementation check", func(t *testing.T) {
+	t.Run("Interface implementation check", func(_ *testing.T) {
 		var _ interface {
 			StoreRefreshToken(ctx context.Context, token *services.RefreshToken) error
 			FindByToken(ctx context.Context, token string) (*services.RefreshToken, error)

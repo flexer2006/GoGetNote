@@ -14,10 +14,18 @@ import (
 	"gogetnote/pkg/logger"
 )
 
-// Вспомогательная функция для безопасной отмены патча
+const (
+	ErrUnpatchMsg        = "failed to unpatch"
+	ErrUnpatchCloseMsg   = "failed to unpatch Close method"
+	ErrPatchCloseMsg     = "error patching Close method"
+	CloseMethodCalledMsg = "close method should be called"
+	MigrationsPath       = "./migrations"
+)
+
 func safeUnpatch(t *testing.T, p *mpatch.Patch) {
+	t.Helper()
 	if err := p.Unpatch(); err != nil {
-		t.Errorf("Failed to unpatch: %v", err)
+		t.Errorf("%s: %v", ErrUnpatchMsg, err)
 	}
 }
 
@@ -27,16 +35,16 @@ func TestClose(t *testing.T) {
 
 	ctx := context.Background()
 
-	t.Run("Close should call Close on the internal database", func(t *testing.T) {
+	t.Run("сlose should call Close on the internal database", func(t *testing.T) {
 		closeCalled := false
 
-		patch, err := mpatch.PatchInstanceMethodByName(reflect.TypeOf(&postgres.Database{}), "Close", func(db *postgres.Database, ctx context.Context) {
+		patch, err := mpatch.PatchInstanceMethodByName(reflect.TypeOf(&postgres.Database{}), "Close", func(_ *postgres.Database, _ context.Context) {
 			closeCalled = true
 		})
-		require.NoError(t, err, "Error patching Close method")
+		require.NoError(t, err, ErrPatchCloseMsg)
 		defer func() {
 			if err := patch.Unpatch(); err != nil {
-				t.Errorf("Failed to unpatch Close method: %v", err)
+				t.Errorf("%s: %v", ErrUnpatchCloseMsg, err)
 			}
 		}()
 
@@ -50,28 +58,28 @@ func TestClose(t *testing.T) {
 			MaxConn:  10,
 		}
 
-		migratePatch, err := mpatch.PatchMethod(postgres.MigrateDSN, func(ctx context.Context, dsn, migrationsPath string) error {
+		migratePatch, err := mpatch.PatchMethod(postgres.MigrateDSN, func(_ context.Context, _, _ string) error {
 			return nil
 		})
 		require.NoError(t, err)
 		defer safeUnpatch(t, migratePatch)
 
-		newPatch, err := mpatch.PatchMethod(postgres.New, func(ctx context.Context, dsn string, minConn, maxConn int) (*postgres.Database, error) {
+		newPatch, err := mpatch.PatchMethod(postgres.New, func(_ context.Context, _ string, _, _ int) (*postgres.Database, error) {
 			return &postgres.Database{}, nil
 		})
 		require.NoError(t, err)
 		defer safeUnpatch(t, newPatch)
 
-		database, err := db.New(ctx, cfg, "./migrations")
+		database, err := db.New(ctx, cfg, MigrationsPath)
 		require.NoError(t, err)
 
 		database.Close(ctx)
 
-		require.True(t, closeCalled, "Close method should be called")
+		require.True(t, closeCalled, CloseMethodCalledMsg)
 	})
 
-	t.Run("Close should not panic", func(t *testing.T) {
-		patch, err := mpatch.PatchInstanceMethodByName(reflect.TypeOf(&postgres.Database{}), "Close", func(db *postgres.Database, ctx context.Context) {
+	t.Run("close should not panic", func(t *testing.T) {
+		patch, err := mpatch.PatchInstanceMethodByName(reflect.TypeOf(&postgres.Database{}), "Close", func(_ *postgres.Database, _ context.Context) {
 		})
 		require.NoError(t, err)
 		defer safeUnpatch(t, patch)
@@ -86,19 +94,19 @@ func TestClose(t *testing.T) {
 			MaxConn:  10,
 		}
 
-		migratePatch, err := mpatch.PatchMethod(postgres.MigrateDSN, func(ctx context.Context, dsn, migrationsPath string) error {
+		migratePatch, err := mpatch.PatchMethod(postgres.MigrateDSN, func(_ context.Context, _, _ string) error {
 			return nil
 		})
 		require.NoError(t, err)
 		defer safeUnpatch(t, migratePatch)
 
-		newPatch, err := mpatch.PatchMethod(postgres.New, func(ctx context.Context, dsn string, minConn, maxConn int) (*postgres.Database, error) {
+		newPatch, err := mpatch.PatchMethod(postgres.New, func(_ context.Context, _ string, _, _ int) (*postgres.Database, error) {
 			return &postgres.Database{}, nil
 		})
 		require.NoError(t, err)
 		defer safeUnpatch(t, newPatch)
 
-		database, err := db.New(ctx, cfg, "./migrations")
+		database, err := db.New(ctx, cfg, MigrationsPath)
 		require.NoError(t, err)
 
 		require.NotPanics(t, func() {

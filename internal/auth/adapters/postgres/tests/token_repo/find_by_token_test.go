@@ -2,7 +2,6 @@ package tokenrepo_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
@@ -14,6 +13,11 @@ import (
 	"gogetnote/internal/auth/adapters/postgres"
 	"gogetnote/internal/auth/domain/services"
 	"gogetnote/pkg/logger"
+)
+
+const (
+	NonExistentToken        = "non-existent-token"
+	ErrorQueryingRefreshMsg = "error querying refresh token"
 )
 
 func TestTokenRepository_FindByToken(t *testing.T) {
@@ -31,7 +35,7 @@ func TestTokenRepository_FindByToken(t *testing.T) {
 		IsRevoked: false,
 	}
 
-	t.Run("Успешное получение токена", func(t *testing.T) {
+	t.Run("successful receipt of the token", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
@@ -59,49 +63,48 @@ func TestTokenRepository_FindByToken(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("Токен не найден", func(t *testing.T) {
+	t.Run("the token was not found", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
 
 		mock.ExpectQuery("SELECT id, user_id, token, expires_at, created_at, is_revoked").
-			WithArgs("non-existent-token").
+			WithArgs(NonExistentToken).
 			WillReturnError(pgx.ErrNoRows)
 
 		repo := postgres.NewTokenRepository(mock)
 
-		token, err := repo.FindByToken(ctx, "non-existent-token")
+		token, err := repo.FindByToken(ctx, NonExistentToken)
 
 		assert.Nil(t, token)
-		assert.ErrorIs(t, err, services.ErrInvalidRefreshToken)
+		require.ErrorIs(t, err, services.ErrInvalidRefreshToken)
 
 		err = mock.ExpectationsWereMet()
 		require.NoError(t, err)
 	})
 
-	t.Run("Ошибка базы данных", func(t *testing.T) {
+	t.Run("database error", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
 
-		dbError := errors.New("database connection failed")
 		mock.ExpectQuery("SELECT id, user_id, token, expires_at, created_at, is_revoked").
 			WithArgs(testToken.Token).
-			WillReturnError(dbError)
+			WillReturnError(ErrDatabaseConnection)
 
 		repo := postgres.NewTokenRepository(mock)
 
 		token, err := repo.FindByToken(ctx, testToken.Token)
 
 		assert.Nil(t, token)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "error querying refresh token")
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), ErrorQueryingRefreshMsg)
 
 		err = mock.ExpectationsWereMet()
 		require.NoError(t, err)
 	})
 
-	t.Run("Пустой токен", func(t *testing.T) {
+	t.Run("an empty token", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
@@ -115,7 +118,7 @@ func TestTokenRepository_FindByToken(t *testing.T) {
 		token, err := repo.FindByToken(ctx, "")
 
 		assert.Nil(t, token)
-		assert.ErrorIs(t, err, services.ErrInvalidRefreshToken)
+		require.ErrorIs(t, err, services.ErrInvalidRefreshToken)
 
 		err = mock.ExpectationsWereMet()
 		require.NoError(t, err)

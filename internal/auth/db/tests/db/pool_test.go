@@ -8,6 +8,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+const PoolShouldReturnConfiguredPool = "pool() should return the configured pool"
+
 type MockDB struct {
 	mock.Mock
 }
@@ -24,7 +26,7 @@ func TestPool(t *testing.T) {
 	mockDB.On("Pool").Return(mockPool)
 
 	returnedPool := mockDB.Pool()
-	assert.Equal(t, mockPool, returnedPool, "Pool() should return the configured pool")
+	assert.Equal(t, mockPool, returnedPool, PoolShouldReturnConfiguredPool)
 
 	mockDB.AssertExpectations(t)
 }

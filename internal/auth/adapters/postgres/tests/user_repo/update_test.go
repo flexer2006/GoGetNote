@@ -2,19 +2,19 @@ package userrepo_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/pashagolub/pgxmock/v4"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"gogetnote/internal/auth/adapters/postgres"
 	"gogetnote/internal/auth/domain/entities"
 	"gogetnote/pkg/logger"
 )
+
+const ErrUpdatingUser = "error updating user"
 
 func TestUserRepository_Update(t *testing.T) {
 	ctx := context.Background()
@@ -38,7 +38,7 @@ func TestUserRepository_Update(t *testing.T) {
 		UpdatedAt:    time.Now().UTC().Add(time.Second).Truncate(time.Microsecond),
 	}
 
-	t.Run("Успешное обновление пользователя", func(t *testing.T) {
+	t.Run("Successful user update", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
@@ -54,20 +54,13 @@ func TestUserRepository_Update(t *testing.T) {
 		updatedUser, err := repo.Update(ctx, user)
 
 		require.NoError(t, err)
-		assert.NotNil(t, updatedUser)
-		assert.Equal(t, expectedUser.ID, updatedUser.ID)
-		assert.Equal(t, expectedUser.Email, updatedUser.Email)
-		assert.Equal(t, expectedUser.Username, updatedUser.Username)
-		assert.Equal(t, expectedUser.PasswordHash, updatedUser.PasswordHash)
-
-		assert.NotZero(t, updatedUser.CreatedAt)
-		assert.NotZero(t, updatedUser.UpdatedAt)
+		assertUserEquals(t, &expectedUser, updatedUser)
 
 		err = mock.ExpectationsWereMet()
 		require.NoError(t, err)
 	})
 
-	t.Run("Пользователь не найден", func(t *testing.T) {
+	t.Run("The user was not found", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
@@ -79,35 +72,34 @@ func TestUserRepository_Update(t *testing.T) {
 		repo := postgres.NewUserRepository(mock)
 		updatedUser, err := repo.Update(ctx, user)
 
-		assert.ErrorIs(t, err, entities.ErrUserNotFound)
-		assert.Nil(t, updatedUser)
+		require.ErrorIs(t, err, entities.ErrUserNotFound)
+		require.Nil(t, updatedUser)
 
 		err = mock.ExpectationsWereMet()
 		require.NoError(t, err)
 	})
 
-	t.Run("Ошибка базы данных", func(t *testing.T) {
+	t.Run("Database error", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
 
-		dbError := errors.New("database connection failed")
 		mock.ExpectQuery("UPDATE users").
 			WithArgs(user.ID, user.Email, user.Username, user.PasswordHash, pgxmock.AnyArg()).
-			WillReturnError(dbError)
+			WillReturnError(ErrDatabaseConnection)
 
 		repo := postgres.NewUserRepository(mock)
 		updatedUser, err := repo.Update(ctx, user)
 
-		assert.Nil(t, updatedUser)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "error updating user")
+		require.Nil(t, updatedUser)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), ErrUpdatingUser)
 
 		err = mock.ExpectationsWereMet()
 		require.NoError(t, err)
 	})
 
-	t.Run("Пустой ID пользователя", func(t *testing.T) {
+	t.Run("Empty User ID", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
@@ -126,8 +118,8 @@ func TestUserRepository_Update(t *testing.T) {
 		repo := postgres.NewUserRepository(mock)
 		updatedUser, err := repo.Update(ctx, userWithEmptyID)
 
-		assert.ErrorIs(t, err, entities.ErrUserNotFound)
-		assert.Nil(t, updatedUser)
+		require.ErrorIs(t, err, entities.ErrUserNotFound)
+		require.Nil(t, updatedUser)
 
 		err = mock.ExpectationsWereMet()
 		require.NoError(t, err)

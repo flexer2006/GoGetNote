@@ -15,6 +15,24 @@ import (
 	"gogetnote/pkg/logger"
 )
 
+var (
+	errDatabaseConnection = errors.New("database connection error")
+	errDuplicateKey       = errors.New("duplicate key value violates unique constraint")
+)
+
+const ErrCreatingUser = "error creating user"
+
+func assertUserEquals(t *testing.T, expected, actual *entities.User) {
+	t.Helper()
+	require.NotNil(t, actual)
+	assert.Equal(t, expected.ID, actual.ID)
+	assert.Equal(t, expected.Email, actual.Email)
+	assert.Equal(t, expected.Username, actual.Username)
+	assert.Equal(t, expected.PasswordHash, actual.PasswordHash)
+	assert.Equal(t, expected.CreatedAt, actual.CreatedAt)
+	assert.Equal(t, expected.UpdatedAt, actual.UpdatedAt)
+}
+
 func TestUserRepository_Create(t *testing.T) {
 	ctx := context.Background()
 	testLogger, err := logger.NewLogger(logger.Development, "debug")
@@ -36,7 +54,7 @@ func TestUserRepository_Create(t *testing.T) {
 		UpdatedAt:    time.Now().UTC().Truncate(time.Microsecond),
 	}
 
-	t.Run("Успешное создание пользователя", func(t *testing.T) {
+	t.Run("successful user creation", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
@@ -52,61 +70,53 @@ func TestUserRepository_Create(t *testing.T) {
 		createdUser, err := repo.Create(ctx, inputUser)
 
 		require.NoError(t, err)
-		assert.NotNil(t, createdUser)
-		assert.Equal(t, expectedUser.ID, createdUser.ID)
-		assert.Equal(t, expectedUser.Email, createdUser.Email)
-		assert.Equal(t, expectedUser.Username, createdUser.Username)
-		assert.Equal(t, expectedUser.PasswordHash, createdUser.PasswordHash)
-		assert.Equal(t, expectedUser.CreatedAt, createdUser.CreatedAt)
-		assert.Equal(t, expectedUser.UpdatedAt, createdUser.UpdatedAt)
+		assertUserEquals(t, &expectedUser, createdUser)
 
 		err = mock.ExpectationsWereMet()
 		require.NoError(t, err)
 	})
 
-	t.Run("Ошибка при создании пользователя - общая ошибка БД", func(t *testing.T) {
+	t.Run("error when creating a user is a common database error", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
 
-		dbError := errors.New("database connection error")
 		mock.ExpectQuery("INSERT INTO users .+").
 			WithArgs(inputUser.Email, inputUser.Username, inputUser.PasswordHash).
-			WillReturnError(dbError)
+			WillReturnError(errDatabaseConnection)
 
 		repo := postgres.NewUserRepository(mock)
 		createdUser, err := repo.Create(ctx, inputUser)
 
-		assert.Nil(t, createdUser)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "error creating user")
+		require.Nil(t, createdUser)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), ErrCreatingUser)
 
 		err = mock.ExpectationsWereMet()
 		require.NoError(t, err)
 	})
 
-	t.Run("Ошибка при создании пользователя - дублирующийся email", func(t *testing.T) {
+	t.Run("error when creating a user - duplicate email", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
 
-		duplicateErr := errors.New("duplicate key value violates unique constraint")
 		mock.ExpectQuery("INSERT INTO users .+").
 			WithArgs(inputUser.Email, inputUser.Username, inputUser.PasswordHash).
-			WillReturnError(duplicateErr)
+			WillReturnError(errDuplicateKey)
 
 		repo := postgres.NewUserRepository(mock)
 		createdUser, err := repo.Create(ctx, inputUser)
 
-		assert.Nil(t, createdUser)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "error creating user")
+		require.Nil(t, createdUser)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), ErrCreatingUser)
 
 		err = mock.ExpectationsWereMet()
 		require.NoError(t, err)
 	})
 
-	t.Run("Создание пользователя с минимальными данными", func(t *testing.T) {
+	t.Run("creating a user with minimal data", func(t *testing.T) {
 		mock, err := pgxmock.NewPool()
 		require.NoError(t, err)
 		defer mock.Close()
@@ -138,9 +148,7 @@ func TestUserRepository_Create(t *testing.T) {
 		createdUser, err := repo.Create(ctx, minimalUser)
 
 		require.NoError(t, err)
-		assert.Equal(t, expectedMinimalUser.Email, createdUser.Email)
-		assert.Equal(t, expectedMinimalUser.Username, createdUser.Username)
-		assert.NotEmpty(t, createdUser.ID)
+		assertUserEquals(t, &expectedMinimalUser, createdUser)
 
 		err = mock.ExpectationsWereMet()
 		require.NoError(t, err)

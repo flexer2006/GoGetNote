@@ -1,7 +1,9 @@
+// Package config содержит конфигурацию для аутентификационного сервиса.
 package config
 
 import (
 	"context"
+	"fmt"
 
 	"gogetnote/pkg/logger"
 
@@ -33,7 +35,7 @@ func Load(ctx context.Context) (*Config, error) {
 	err := cleanenv.ReadEnv(&cfg)
 	if err != nil {
 		log.Error(ctx, ErrFailedLoadConfig, zap.Error(err))
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", ErrFailedLoadConfig, err)
 	}
 
 	log.Info(ctx, LogConfigLoaded,

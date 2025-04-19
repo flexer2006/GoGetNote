@@ -1,3 +1,4 @@
+// Package db предоставляет функционал для работы с базой данных сервиса аутентификации.
 package db
 
 import (
@@ -22,10 +23,12 @@ const (
 
 // Константы для сообщений об ошибках.
 const (
-	ErrDBMigrations = "failed to apply authentication database migrations"
-	ErrDBConnection = "failed to connect to authentication database"
-	ErrGetPath      = "failed to get path"
+	ErrDBMigrations      = "failed to apply authentication database migrations"
+	ErrDBConnection      = "failed to connect to authentication database"
+	ErrGetPath           = "failed to get path"
+	ErrDBCheckConnection = "error checking the database connection"
 )
+const filePrefix = "file://"
 
 // DB представляет соединение с базой данных сервиса авторизации.
 type DB struct {
@@ -49,9 +52,9 @@ func New(ctx context.Context, cfg *config.PostgresConfig, migrationsDir string) 
 		if err != nil {
 			return nil, fmt.Errorf("%s: %s: %w", ErrDBMigrations, ErrGetPath, err)
 		}
-		migrationsPath = "file://" + absPath
+		migrationsPath = filePrefix + absPath
 	} else {
-		migrationsPath = "file://" + migrationsDir
+		migrationsPath = filePrefix + migrationsDir
 	}
 
 	log.Info(ctx, LogMigrationStarting, zap.String("migrations_path", migrationsPath))
@@ -83,7 +86,10 @@ func (db *DB) Pool() *pgxpool.Pool {
 
 // Ping проверяет соединение с базой данных.
 func (db *DB) Ping(ctx context.Context) error {
-	return db.database.Ping(ctx)
+	if err := db.database.Ping(ctx); err != nil {
+		return fmt.Errorf("%s: %w", ErrDBCheckConnection, err)
+	}
+	return nil
 }
 
 // Database возвращает доступ к базовой реализации для расширенных операций.

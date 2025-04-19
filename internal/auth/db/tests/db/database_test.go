@@ -9,6 +9,10 @@ import (
 	"gogetnote/pkg/db/postgres"
 )
 
+const (
+	DatabaseShouldReturnConfiguredDB = "Database() should return the configured database"
+)
+
 type MockDB2 struct {
 	mock.Mock
 }
@@ -25,7 +29,7 @@ func TestDatabase(t *testing.T) {
 	mockDB.On("Database").Return(mockDatabase)
 
 	returnedDatabase := mockDB.Database()
-	assert.Equal(t, mockDatabase, returnedDatabase, "Database() should return the configured database")
+	assert.Equal(t, mockDatabase, returnedDatabase, DatabaseShouldReturnConfiguredDB)
 
 	mockDB.AssertExpectations(t)
 }

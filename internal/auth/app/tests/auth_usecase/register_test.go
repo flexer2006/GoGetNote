@@ -15,6 +15,11 @@ import (
 	"gogetnote/internal/auth/domain/services"
 )
 
+var (
+	ErrHashing      = errors.New("hashing error")
+	ErrUserCreation = errors.New("user creation failed")
+)
+
 func TestRegister(t *testing.T) {
 	testEmail := "test@example.com"
 	testUsername := "testuser"
@@ -57,7 +62,7 @@ func TestRegister(t *testing.T) {
 		errorContext  string
 	}{
 		{
-			name:     "Success - user registered successfully",
+			name:     "success - user registered successfully",
 			email:    testEmail,
 			username: testUsername,
 			password: testPassword,
@@ -83,11 +88,11 @@ func TestRegister(t *testing.T) {
 			expectedErr:   nil,
 		},
 		{
-			name:     "Error - invalid email format",
+			name:     "error - invalid email format",
 			email:    "invalid-email",
 			username: testUsername,
 			password: testPassword,
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(_ *mockUserRepository, _ *mockTokenRepository, _ *mockPasswordService, _ *mockTokenService) {
 			},
 			expectedToken: nil,
 			expectedErr:   entities.ErrInvalidEmail,
@@ -98,29 +103,29 @@ func TestRegister(t *testing.T) {
 			email:    testEmail,
 			username: "",
 			password: testPassword,
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(_ *mockUserRepository, _ *mockTokenRepository, _ *mockPasswordService, _ *mockTokenService) {
 			},
 			expectedToken: nil,
 			expectedErr:   entities.ErrEmptyUsername,
 			errorContext:  "validating username",
 		},
 		{
-			name:     "Error - password too short",
+			name:     "esrror - password too short",
 			email:    testEmail,
 			username: testUsername,
 			password: "short",
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(_ *mockUserRepository, _ *mockTokenRepository, _ *mockPasswordService, _ *mockTokenService) {
 			},
 			expectedToken: nil,
 			expectedErr:   entities.ErrPasswordTooShort,
 			errorContext:  "validating password",
 		},
 		{
-			name:     "Error - user already exists",
+			name:     "error - user already exists",
 			email:    testEmail,
 			username: testUsername,
 			password: testPassword,
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(mockUserRepo *mockUserRepository, _ *mockTokenRepository, _ *mockPasswordService, _ *mockTokenService) {
 				mockUserRepo.On("FindByEmail", mock.Anything, testEmail).Return(createdUser, nil).Once()
 			},
 			expectedToken: nil,
@@ -128,15 +133,15 @@ func TestRegister(t *testing.T) {
 			errorContext:  "email already registered",
 		},
 		{
-			name:     "Error - database error during user check",
+			name:     "esrror - database error during user check",
 			email:    testEmail,
 			username: testUsername,
 			password: testPassword,
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
-				mockUserRepo.On("FindByEmail", mock.Anything, testEmail).Return(nil, errors.New("database error")).Once()
+			setupMocks: func(mockUserRepo *mockUserRepository, _ *mockTokenRepository, _ *mockPasswordService, _ *mockTokenService) {
+				mockUserRepo.On("FindByEmail", mock.Anything, testEmail).Return(nil, ErrDatabase).Once()
 			},
 			expectedToken: nil,
-			expectedErr:   errors.New("database error"),
+			expectedErr:   ErrDatabase,
 			errorContext:  "checking existing user",
 		},
 		{
@@ -144,39 +149,39 @@ func TestRegister(t *testing.T) {
 			email:    testEmail,
 			username: testUsername,
 			password: testPassword,
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(mockUserRepo *mockUserRepository, _ *mockTokenRepository, mockPasswordSvc *mockPasswordService, _ *mockTokenService) {
 				mockUserRepo.On("FindByEmail", mock.Anything, testEmail).Return(nil, entities.ErrUserNotFound).Once()
 
-				mockPasswordSvc.On("Hash", mock.Anything, testPassword).Return("", errors.New("hashing error")).Once()
+				mockPasswordSvc.On("Hash", mock.Anything, testPassword).Return("", ErrHashing).Once()
 			},
 			expectedToken: nil,
-			expectedErr:   errors.New("hashing error"),
+			expectedErr:   ErrHashing,
 			errorContext:  "hashing password",
 		},
 		{
-			name:     "Error - user creation failure",
+			name:     "error - user creation failure",
 			email:    testEmail,
 			username: testUsername,
 			password: testPassword,
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(mockUserRepo *mockUserRepository, _ *mockTokenRepository, mockPasswordSvc *mockPasswordService, _ *mockTokenService) {
 				mockUserRepo.On("FindByEmail", mock.Anything, testEmail).Return(nil, entities.ErrUserNotFound).Once()
 
 				mockPasswordSvc.On("Hash", mock.Anything, testPassword).Return(hashedPassword, nil).Once()
 
 				mockUserRepo.On("Create", mock.Anything, mock.MatchedBy(func(u *entities.User) bool {
 					return u.Email == testEmail && u.Username == testUsername && u.PasswordHash == hashedPassword
-				})).Return(nil, errors.New("user creation failed")).Once()
+				})).Return(nil, ErrUserCreation).Once()
 			},
 			expectedToken: nil,
-			expectedErr:   errors.New("user creation failed"),
+			expectedErr:   ErrUserCreation,
 			errorContext:  "creating user",
 		},
 		{
-			name:     "Error - token generation failure",
+			name:     "error - token generation failure",
 			email:    testEmail,
 			username: testUsername,
 			password: testPassword,
-			setupMocks: func(mockUserRepo *mockUserRepository, mockTokenRepo *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
+			setupMocks: func(mockUserRepo *mockUserRepository, _ *mockTokenRepository, mockPasswordSvc *mockPasswordService, mockTokenSvc *mockTokenService) {
 				mockUserRepo.On("FindByEmail", mock.Anything, testEmail).Return(nil, entities.ErrUserNotFound).Once()
 
 				mockPasswordSvc.On("Hash", mock.Anything, testPassword).Return(hashedPassword, nil).Once()
@@ -186,7 +191,7 @@ func TestRegister(t *testing.T) {
 				})).Return(createdUser, nil).Once()
 
 				mockTokenSvc.On("GenerateAccessToken", mock.Anything, generatedUserID, testUsername).
-					Return("", time.Time{}, errors.New("token generation failed")).Once()
+					Return("", time.Time{}, ErrTokenGeneration).Once()
 			},
 			expectedToken: nil,
 			expectedErr:   services.ErrTokenGenerationFailed,
@@ -194,41 +199,41 @@ func TestRegister(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, ttt := range tests {
+		t.Run(ttt.name, func(t *testing.T) {
 			mockUserRepo := new(mockUserRepository)
 			mockTokenRepo := new(mockTokenRepository)
 			mockPasswordSvc := new(mockPasswordService)
 			mockTokenSvc := new(mockTokenService)
 
-			tt.setupMocks(mockUserRepo, mockTokenRepo, mockPasswordSvc, mockTokenSvc)
+			ttt.setupMocks(mockUserRepo, mockTokenRepo, mockPasswordSvc, mockTokenSvc)
 
 			authUseCase := app.NewAuthUseCase(mockUserRepo, mockTokenRepo, mockPasswordSvc, mockTokenSvc)
 
 			ctx := context.Background()
-			tokenPair, err := authUseCase.Register(ctx, tt.email, tt.username, tt.password)
+			tokenPair, err := authUseCase.Register(ctx, ttt.email, ttt.username, ttt.password)
 
-			if tt.expectedErr != nil {
+			if ttt.expectedErr != nil {
 				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.errorContext)
+				assert.Contains(t, err.Error(), ttt.errorContext)
 
 				if errors.Is(err, entities.ErrInvalidEmail) ||
 					errors.Is(err, entities.ErrEmptyUsername) ||
 					errors.Is(err, entities.ErrPasswordTooShort) ||
 					errors.Is(err, services.ErrEmailAlreadyExists) ||
 					errors.Is(err, services.ErrTokenGenerationFailed) {
-					assert.ErrorIs(t, err, tt.expectedErr)
+					require.ErrorIs(t, err, ttt.expectedErr)
 				}
 
 				assert.Nil(t, tokenPair)
 			} else {
 				require.NoError(t, err)
 				assert.NotNil(t, tokenPair)
-				assert.Equal(t, tt.expectedToken.UserID, tokenPair.UserID)
-				assert.Equal(t, tt.expectedToken.Username, tokenPair.Username)
-				assert.Equal(t, tt.expectedToken.AccessToken, tokenPair.AccessToken)
-				assert.Equal(t, tt.expectedToken.RefreshToken, tokenPair.RefreshToken)
-				assert.Equal(t, tt.expectedToken.ExpiresAt, tokenPair.ExpiresAt)
+				assert.Equal(t, ttt.expectedToken.UserID, tokenPair.UserID)
+				assert.Equal(t, ttt.expectedToken.Username, tokenPair.Username)
+				assert.Equal(t, ttt.expectedToken.AccessToken, tokenPair.AccessToken)
+				assert.Equal(t, ttt.expectedToken.RefreshToken, tokenPair.RefreshToken)
+				assert.Equal(t, ttt.expectedToken.ExpiresAt, tokenPair.ExpiresAt)
 			}
 
 			mockUserRepo.AssertExpectations(t)
