@@ -1,9 +1,11 @@
+// Package notes using for domain
 package notes
 
 import (
 	"time"
 )
 
+// Note структура для хранения заметок.
 type Note struct {
 	NoteID    string    `gorm:"primaryKey;type:varchar(100);unique_index" json:"note_id"`
 	UserID    string    `gorm:"type:varchar(100)" json:"user_id"`

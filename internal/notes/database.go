@@ -1,3 +1,4 @@
+// Package notes using for database
 package notes
 
 import (
@@ -8,21 +9,21 @@ import (
 	"gorm.io/gorm"
 )
 
-// Структура DB для использования с GORM
+// DB структура для использования с GORM.
 type DB struct {
 	*gorm.DB
 }
 
-// Функция инициализации базы данных
-func InitDB(conf string) *DB {
+// InitDB Функция инициализации базы данных.
+func InitDB(connStr string) *DB {
 	// Открытие соединения с базой данных
-	db, err := gorm.Open(postgres.Open(conf), &gorm.Config{})
+	gormDB, err := gorm.Open(postgres.Open(connStr), &gorm.Config{})
 	if err != nil {
 		fmt.Println("failed to connect database:", err)
 		os.Exit(1)
 	}
 	// Возвращаем DB с подключением
 	return &DB{
-		DB: db,
+		DB: gormDB,
 	}
 }

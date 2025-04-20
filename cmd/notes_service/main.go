@@ -17,6 +17,7 @@ func main() {
 
 	// Redis client
 	redisClient := notes.NewRedisClient()
+	
 	// Создание репозитория для заметок
 	noteRepository := notes.NewNoteRepository(db.DB)
 

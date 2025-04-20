@@ -1,3 +1,4 @@
+// Package notes using for redis client
 package notes
 
 import (
@@ -9,6 +10,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+// NewRedisClient создает новый клиент Redis с заданными параметрами.
 func NewRedisClient() *redis.Client {
 	// Создаем клиент Redis
 	redisAddr := os.Getenv("REDIS_ADDR")
