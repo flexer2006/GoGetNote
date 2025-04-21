@@ -492,7 +492,7 @@ const file_api_auth_v1_auth_service_proto_rawDesc = "" +
 	"\bRegister\x12\x18.auth.v1.RegisterRequest\x1a\x19.auth.v1.RegisterResponse\" \x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/api/v1/auth/register\x12U\n" +
 	"\x05Login\x12\x15.auth.v1.LoginRequest\x1a\x16.auth.v1.LoginResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/api/v1/auth/login\x12o\n" +
 	"\rRefreshTokens\x12\x1d.auth.v1.RefreshTokensRequest\x1a\x1e.auth.v1.RefreshTokensResponse\"\x1f\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/api/v1/auth/refresh\x12X\n" +
-	"\x06Logout\x12\x16.auth.v1.LogoutRequest\x1a\x16.google.protobuf.Empty\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/api/v1/auth/logoutBZZXgitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/auth/v1;authv1b\x06proto3"
+	"\x06Logout\x12\x16.auth.v1.LogoutRequest\x1a\x16.google.protobuf.Empty\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/api/v1/auth/logoutB\"Z gogetnote/pkg/api/auth/v1;authv1b\x06proto3"
 
 var (
 	file_api_auth_v1_auth_service_proto_rawDescOnce sync.Once

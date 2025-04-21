@@ -20,6 +20,37 @@ services:
       timeout: 5s
       retries: 5
 
+  go-auth:
+    build:
+      context: ../
+      dockerfile: build/containers/docker/auth.Dockerfile
+    container_name: gogetnote-auth-service
+    environment:
+      AUTH_POSTGRES_HOST: ${AUTH_POSTGRES_HOST}
+      AUTH_POSTGRES_PORT: ${AUTH_POSTGRES_PORT}
+      AUTH_POSTGRES_USER: ${AUTH_POSTGRES_USER}
+      AUTH_POSTGRES_PASSWORD: ${AUTH_POSTGRES_PASSWORD}
+      AUTH_POSTGRES_DB: ${AUTH_POSTGRES_DB}
+      AUTH_POSTGRES_MIN_CONN: ${AUTH_POSTGRES_MIN_CONN}
+      AUTH_POSTGRES_MAX_CONN: ${AUTH_POSTGRES_MAX_CONN}
+      AUTH_GRACEFUL_SHUTDOWN_TIMEOUT: ${AUTH_GRACEFUL_SHUTDOWN_TIMEOUT}
+      AUTH_LOGGER_LEVEL: ${AUTH_LOGGER_LEVEL}
+      AUTH_LOGGER_MODE: ${AUTH_LOGGER_MODE}
+      AUTH_GRPC_HOST: ${AUTH_GRPC_HOST}
+      AUTH_GRPC_PORT: ${AUTH_GRPC_PORT}
+      AUTH_JWT_SECRET_KEY: ${AUTH_JWT_SECRET_KEY}
+      AUTH_JWT_ACCESS_TOKEN_TTL: ${AUTH_JWT_ACCESS_TOKEN_TTL}
+      AUTH_JWT_REFRESH_TOKEN_TTL: ${AUTH_JWT_REFRESH_TOKEN_TTL}
+      AUTH_JWT_BCRYPT_COST: ${AUTH_JWT_BCRYPT_COST}
+    ports:
+      - "${AUTH_GRPC_PORT}:${AUTH_GRPC_PORT}"
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+    networks:
+      - gogetnote-network
+    restart: unless-stopped
+
 networks:
   gogetnote-network:
     driver: bridge

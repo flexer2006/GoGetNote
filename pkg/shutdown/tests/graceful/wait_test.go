@@ -12,15 +12,17 @@ import (
 )
 
 const (
-	errFailedToFindProcess      = "failed to find process:"
-	errFailedToSendSignal       = "failed to send signal:"
-	errHook1NotCalled           = "hook 1 was not called"
-	errHook2NotCalled           = "hook 2 was not called"
-	errWaitFunctionTimeout      = "wait function didn't return within the expected time"
-	errWaitDidntRespectTimeout  = "wait didn't respect timeout: took"
-	errSlowHookShouldntComplete = "the slow hook shouldn't have completed"
-	errHooksRunSequentially     = "hooks appear to run sequentially:"
-	errTimeoutWaitingForHooks   = "timed out waiting for hooks to complete"
+	errFailedToFindProcess        = "failed to find process:"
+	errFailedToSendSignal         = "failed to send signal:"
+	errHook1NotCalled             = "hook 1 was not called"
+	errHook2NotCalled             = "hook 2 was not called"
+	errWaitFunctionTimeout        = "wait function didn't return within the expected time"
+	errWaitDidntRespectTimeout    = "wait didn't respect timeout: took"
+	errSlowHookShouldntComplete   = "the slow hook shouldn't have completed"
+	errHooksRunSequentially       = "hooks appear to run sequentially:"
+	errTimeoutWaitingForHooks     = "timed out waiting for hooks to complete"
+	errHookNotCalledAfterCancel   = "hook was not called after context cancellation"
+	errWaitNotReturnedAfterCancel = "wait function didn't return after context cancellation"
 )
 
 func TestWaitExecutesHooks(t *testing.T) {
@@ -37,8 +39,9 @@ func TestWaitExecutesHooks(t *testing.T) {
 		return nil
 	}
 
+	ctx := context.Background()
 	go func() {
-		shutdown.Wait(time.Second, hook1, hook2)
+		shutdown.Wait(ctx, time.Second, hook1, hook2)
 	}()
 
 	time.Sleep(100 * time.Millisecond)
@@ -83,8 +86,9 @@ func TestWaitRespectsTimeout(t *testing.T) {
 	}
 
 	start := time.Now()
+	ctx := context.Background()
 	go func() {
-		shutdown.Wait(500*time.Millisecond, slowHook)
+		shutdown.Wait(ctx, 500*time.Millisecond, slowHook)
 		close(waitDone)
 	}()
 
@@ -128,8 +132,9 @@ func TestWaitRunsHooksConcurrently(t *testing.T) {
 		return nil
 	}
 
+	ctx := context.Background()
 	go func() {
-		shutdown.Wait(time.Second, hook1, hook2)
+		shutdown.Wait(ctx, time.Second, hook1, hook2)
 	}()
 
 	time.Sleep(100 * time.Millisecond)
@@ -150,5 +155,38 @@ func TestWaitRunsHooksConcurrently(t *testing.T) {
 		}
 	case <-time.After(2 * time.Second):
 		t.Fatal(errTimeoutWaitingForHooks)
+	}
+}
+
+func TestWaitContextCancellation(t *testing.T) {
+	hook1Called := make(chan struct{})
+
+	hook1 := func(_ context.Context) error {
+		close(hook1Called)
+		return nil
+	}
+
+	waitDone := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		shutdown.Wait(ctx, time.Second, hook1)
+		close(waitDone)
+	}()
+
+	time.Sleep(100 * time.Millisecond)
+
+	cancel()
+
+	select {
+	case <-hook1Called:
+	case <-time.After(2 * time.Second):
+		t.Error(errHookNotCalledAfterCancel)
+	}
+
+	select {
+	case <-waitDone:
+	case <-time.After(2 * time.Second):
+		t.Fatal(errWaitNotReturnedAfterCancel)
 	}
 }

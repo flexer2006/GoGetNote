@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package common.v1;
 
-option go_package = "gitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/common/v1;commonv1";
+option go_package = "gogetnote/pkg/api/common/v1;commonv1";
 
 // ErrorResponse определяет стандартный формат ответа с ошибкой.
 message ErrorResponse {

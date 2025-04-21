@@ -4,6 +4,7 @@ vars:
   PROTO_DIR: api
   GO_OUT_DIR: pkg/api
 
+tasks:
   proto:clean:linux:
     desc: Очищает сгенерированные файлы (Linux)
     cmds:

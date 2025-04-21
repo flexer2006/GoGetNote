@@ -13,12 +13,18 @@ import (
 
 // Wait блокирует выполнение до получения сигнала SIGINT или SIGTERM,
 // затем выполняет все хуки в рамках заданного timeout.
-func Wait(timeout time.Duration, hooks ...func(context.Context) error) {
+// Если контекст завершается до получения сигнала, функция также завершает работу.
+func Wait(ctx context.Context, timeout time.Duration, hooks ...func(context.Context) error) {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-	<-sigCh
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	select {
+	case <-sigCh:
+
+	case <-ctx.Done():
+	}
+
+	shutdownCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	var wgp sync.WaitGroup
@@ -26,7 +32,7 @@ func Wait(timeout time.Duration, hooks ...func(context.Context) error) {
 		wgp.Add(1)
 		go func(fn func(context.Context) error) {
 			defer wgp.Done()
-			_ = fn(ctx)
+			_ = fn(shutdownCtx)
 		}(hook)
 	}
 
@@ -38,6 +44,6 @@ func Wait(timeout time.Duration, hooks ...func(context.Context) error) {
 
 	select {
 	case <-done:
-	case <-ctx.Done():
+	case <-shutdownCtx.Done():
 	}
 }

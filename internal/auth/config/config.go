@@ -24,6 +24,7 @@ type Config struct {
 	Logging  LoggingConfig  `yaml:"logging"`
 	Shutdown ShutdownConfig `yaml:"shutdown"`
 	GRPC     GRPCConfig     `yaml:"grpc"`
+	JWT      JWTConfig      `yaml:"jwt"`
 }
 
 // Load загружает конфигурацию из переменных окружения.

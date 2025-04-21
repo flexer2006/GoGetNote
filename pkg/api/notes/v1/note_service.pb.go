@@ -547,7 +547,7 @@ const file_api_notes_v1_note_service_proto_rawDesc = "" +
 	"\n" +
 	"UpdateNote\x12\x1b.notes.v1.UpdateNoteRequest\x1a\x16.notes.v1.NoteResponse\"\"\x82\xd3\xe4\x93\x02\x1c:\x01*2\x17/api/v1/notes/{note_id}\x12b\n" +
 	"\n" +
-	"DeleteNote\x12\x1b.notes.v1.DeleteNoteRequest\x1a\x16.google.protobuf.Empty\"\x1f\x82\xd3\xe4\x93\x02\x19*\x17/api/v1/notes/{note_id}B\\ZZgitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/notes/v1;notesv1b\x06proto3"
+	"DeleteNote\x12\x1b.notes.v1.DeleteNoteRequest\x1a\x16.google.protobuf.Empty\"\x1f\x82\xd3\xe4\x93\x02\x19*\x17/api/v1/notes/{note_id}B$Z\"gogetnote/pkg/api/notes/v1;notesv1b\x06proto3"
 
 var (
 	file_api_notes_v1_note_service_proto_rawDescOnce sync.Once

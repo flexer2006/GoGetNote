@@ -109,7 +109,7 @@ const file_api_auth_v1_user_service_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt2o\n" +
 	"\vUserService\x12`\n" +
-	"\x0eGetUserProfile\x12\x16.google.protobuf.Empty\x1a\x1c.auth.v1.UserProfileResponse\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/api/v1/users/meBZZXgitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/auth/v1;authv1b\x06proto3"
+	"\x0eGetUserProfile\x12\x16.google.protobuf.Empty\x1a\x1c.auth.v1.UserProfileResponse\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/api/v1/users/meB\"Z gogetnote/pkg/api/auth/v1;authv1b\x06proto3"
 
 var (
 	file_api_auth_v1_user_service_proto_rawDescOnce sync.Once

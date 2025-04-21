@@ -18,7 +18,7 @@ CREATE INDEX idx_users_email ON users(email);
 CREATE TABLE refresh_tokens (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    token VARCHAR(255) NOT NULL UNIQUE,
+    token TEXT NOT NULL UNIQUE,
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     is_revoked BOOLEAN NOT NULL DEFAULT FALSE

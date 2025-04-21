@@ -4,9 +4,10 @@ package grpc
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"strings"
 
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -14,7 +15,7 @@ import (
 
 	"gogetnote/internal/auth/ports/api"
 	"gogetnote/internal/auth/ports/services"
-	"gogetnote/pkg/api/auth/v1"
+	authv1 "gogetnote/pkg/api/auth/v1"
 	"gogetnote/pkg/logger"
 )
 
@@ -86,8 +87,13 @@ func (h *UserHandler) GetUserProfile(ctx context.Context, _ *emptypb.Empty) (*au
 	}, nil
 }
 
+// ServiceRegistrar это интерфейс, представляющий собой возможность регистрации сервиса.
+type ServiceRegistrar interface {
+	RegisterService(desc *grpc.ServiceDesc, impl any)
+}
+
 // RegisterService регистрирует UserService в gRPC сервере.
-func (h *UserHandler) RegisterService(server *grpc.Server) {
+func (h *UserHandler) RegisterService(server ServiceRegistrar) {
 	authv1.RegisterUserServiceServer(server, h)
 }
 

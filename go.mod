@@ -13,7 +13,7 @@ require (
 	github.com/undefinedlabs/go-mpatch v1.0.7
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.37.0
-	google.golang.org/genproto/googleapis/api v0.0.0-20250414145226-207652e42e2e
+	google.golang.org/genproto/googleapis/api v0.0.0-20250303144028-a0af3efb3deb
 	google.golang.org/grpc v1.71.1
 	google.golang.org/protobuf v1.36.6
 )

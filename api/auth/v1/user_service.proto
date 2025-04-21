@@ -6,7 +6,7 @@ import "api/google/protobuf/timestamp.proto";
 import "api/google/protobuf/empty.proto";
 import "api/google/api/annotations.proto";
 
-option go_package = "gitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/auth/v1;authv1";
+option go_package = "gogetnote/pkg/api/auth/v1;authv1";
 
 // UserService предоставляет методы для работы с профилем пользователя
 service UserService {

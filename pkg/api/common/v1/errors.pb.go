@@ -21,14 +21,14 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// ErrorResponse определяет стандартный формат ответа с ошибкой
+// ErrorResponse определяет стандартный формат ответа с ошибкой.
 type ErrorResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// HTTP статус-код (например, 400, 401, 403, 404, 422, 500)
+	// HTTP статус-код (например, 400, 401, 403, 404, 422, 500).
 	Status int32 `protobuf:"varint,1,opt,name=status,proto3" json:"status,omitempty"`
-	// Код ошибки для программной обработки
+	// Код ошибки для программной обработки.
 	Code string `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
-	// Человекочитаемое сообщение об ошибке
+	// Человеко-читаемое сообщение об ошибке.
 	Message       string `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -93,7 +93,7 @@ const file_api_common_v1_errors_proto_rawDesc = "" +
 	"\rErrorResponse\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\x05R\x06status\x12\x12\n" +
 	"\x04code\x18\x02 \x01(\tR\x04code\x12\x18\n" +
-	"\amessage\x18\x03 \x01(\tR\amessageB^Z\\gitlab.crja72.ru/golang/2025/spring/course/projects/go9/gogetnote/pkg/api/common/v1;commonv1b\x06proto3"
+	"\amessage\x18\x03 \x01(\tR\amessageB&Z$gogetnote/pkg/api/common/v1;commonv1b\x06proto3"
 
 var (
 	file_api_common_v1_errors_proto_rawDescOnce sync.Once

@@ -4,14 +4,13 @@ package grpc
 import (
 	"context"
 	"fmt"
-	"google.golang.org/grpc"
 
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"gogetnote/internal/auth/ports/api"
-	"gogetnote/pkg/api/auth/v1"
+	authv1 "gogetnote/pkg/api/auth/v1"
 	"gogetnote/pkg/logger"
 )
 
@@ -80,7 +79,6 @@ func (h *AuthHandler) Register(ctx context.Context, req *authv1.RegisterRequest)
 	tokenPair, err := h.authUseCase.Register(ctx, req.Email, req.Username, req.Password)
 	if err != nil {
 		log.Error(ctx, fmt.Sprintf("%s: %v", ErrRegisterMsg, err))
-
 		switch err.Error() {
 		case ErrUserAlreadyExistsMsg:
 			return nil, fmt.Errorf("%s: %w", ErrUserRegistrationFailedMsg, ErrUserAlreadyExists)
@@ -168,6 +166,6 @@ func (h *AuthHandler) Logout(ctx context.Context, req *authv1.LogoutRequest) (*e
 }
 
 // RegisterService регистрирует AuthService в gRPC сервере.
-func (h *AuthHandler) RegisterService(server *grpc.Server) {
+func (h *AuthHandler) RegisterService(server ServiceRegistrar) {
 	authv1.RegisterAuthServiceServer(server, h)
 }

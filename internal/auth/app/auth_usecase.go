@@ -156,7 +156,6 @@ func (a *AuthUseCaseImpl) Register(ctx context.Context, email, username, passwor
 		log.Error(ctx, msgErrGenerateTokens, zap.Error(err), zap.String("userID", createdUser.ID))
 		return nil, fmt.Errorf("%s: %w", errCtxGeneratingTokens, err)
 	}
-
 	log.Info(ctx, msgTokensGenerated, zap.String("userID", createdUser.ID))
 	return tokenPair, nil
 }

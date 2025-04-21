@@ -9,9 +9,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	"go.uber.org/zap"
 	"gogetnote/internal/auth/config"
 	"gogetnote/pkg/logger"
+
+	"go.uber.org/zap"
 )
 
 // Константы для логирования.
@@ -63,8 +64,7 @@ func (s *Server) Start(ctx context.Context) error {
 }
 
 // Stop останавливает gRPC сервер.
-func (s *Server) Stop() {
-	ctx := context.Background()
+func (s *Server) Stop(ctx context.Context) {
 	log := logger.Log(ctx)
 
 	log.Info(ctx, LogServerStopping)
@@ -75,4 +75,9 @@ func (s *Server) Stop() {
 // RegisterService регистрирует gRPC сервис в сервере.
 func (s *Server) RegisterService(registerFn func(server *grpc.Server)) {
 	registerFn(s.server)
+}
+
+// RegisterGRPCService регистрирует gRPC сервис в сервере используя дескриптор сервиса.
+func (s *Server) RegisterGRPCService(desc *grpc.ServiceDesc, impl interface{}) {
+	s.server.RegisterService(desc, impl)
 }
