@@ -14,8 +14,8 @@ type GRPCClientConfig struct {
 
 // GRPCServiceConfig представляет конфигурацию для подключения к gRPC сервису.
 type GRPCServiceConfig struct {
-	Host           string        `yaml:"host" env:"HOST" env-default:"localhost"`
-	Port           int           `yaml:"port" env:"PORT" env-default:"50051"`
+	Host           string        `yaml:"host" env:"HOST" env-default:"0.0.0.0"`
+	Port           int           `yaml:"port" env:"PORT" env-default:"50052"`
 	ConnectTimeout time.Duration `yaml:"connect_timeout" env:"GATEWAY_TO_AUTHCONNECT_TIMEOUT" env-default:"5s"`
 }
 
