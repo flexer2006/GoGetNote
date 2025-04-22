@@ -20,11 +20,92 @@ services:
       timeout: 5s
       retries: 5
 
-  go-auth:
+  postgres-notes:
+    build:
+      context: ../
+      dockerfile: build/containers/docker/postgres.Dockerfile
+    container_name: gogetnote-postgres-notes
+    environment:
+      POSTGRES_USER: ${NOTES_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${NOTES_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${NOTES_POSTGRES_DB}
+    ports:
+      - "${NOTES_POSTGRES_PORT}:5432"
+    volumes:
+      - postgres-notes-data:/var/lib/postgresql/data
+    networks:
+      - gogetnote-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${NOTES_POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    build:
+      context: ../
+      dockerfile: build/containers/docker/redis.Dockerfile
+    container_name: gogetnote-redis
+    ports:
+      - "${GATEWAY_REDIS_PORT}:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - gogetnote-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  gateway:
+    build:
+      context: ../
+      dockerfile: build/containers/docker/gateway.Dockerfile
+    container_name: gogetnote-gateway
+    environment:
+      GATEWAY_HTTP_HOST: ${GATEWAY_HTTP_HOST}
+      GATEWAY_HTTP_PORT: ${GATEWAY_HTTP_PORT}
+      GATEWAY_HTTP_READ_TIMEOUT: ${GATEWAY_HTTP_READ_TIMEOUT}
+      GATEWAY_HTTP_WRITE_TIMEOUT: ${GATEWAY_HTTP_WRITE_TIMEOUT}
+      GATEWAY_HTTP_SHUTDOWN_TIMEOUT: ${GATEWAY_HTTP_SHUTDOWN_TIMEOUT}
+      GATEWAY_GRACEFUL_SHUTDOWN_TIMEOUT: ${GATEWAY_GRACEFUL_SHUTDOWN_TIMEOUT}
+      GATEWAY_LOGGER_LEVEL: ${GATEWAY_LOGGER_LEVEL}
+      GATEWAY_LOGGER_MODE: ${GATEWAY_LOGGER_MODE}
+      GATEWAY_GRPC_HOST: ${GATEWAY_GRPC_HOST}
+      GATEWAY_GRPC_PORT: ${GATEWAY_GRPC_PORT}
+      GATEWAY_GRPC_AUTH_HOST: ${GATEWAY_GRPC_AUTH_HOST}
+      GATEWAY_GRPC_NOTES_HOST: ${GATEWAY_GRPC_NOTES_HOST}
+      GATEWAY_REDIS_HOST: ${GATEWAY_REDIS_HOST}
+      GATEWAY_REDIS_PORT: ${GATEWAY_REDIS_PORT}
+      GATEWAY_REDIS_PASSWORD: ${GATEWAY_REDIS_PASSWORD}
+      GATEWAY_REDIS_DB: ${GATEWAY_REDIS_DB}
+      GATEWAY_REDIS_CONNECT_TIMEOUT: ${GATEWAY_REDIS_CONNECT_TIMEOUT}
+      GATEWAY_REDIS_READ_TIMEOUT: ${GATEWAY_REDIS_READ_TIMEOUT}
+      GATEWAY_REDIS_WRITE_TIMEOUT: ${GATEWAY_REDIS_WRITE_TIMEOUT}
+      GATEWAY_REDIS_POOL_SIZE: ${GATEWAY_REDIS_POOL_SIZE}
+      GATEWAY_REDIS_MIN_IDLE: ${GATEWAY_REDIS_MIN_IDLE}
+      GATEWAY_REDIS_IDLE_TIMEOUT: ${GATEWAY_REDIS_IDLE_TIMEOUT}
+      GATEWAY_REDIS_MAX_CONN_LIFETIME: ${GATEWAY_REDIS_MAX_CONN_LIFETIME}
+      GATEWAY_REDIS_DEFAULT_TTL: ${GATEWAY_REDIS_DEFAULT_TTL}
+    ports:
+      - "${GATEWAY_HTTP_PORT}:${GATEWAY_HTTP_PORT}"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - gogetnote-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "${GATEWAY_HTTP_PORT}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  auth:
     build:
       context: ../
       dockerfile: build/containers/docker/auth.Dockerfile
-    container_name: gogetnote-auth-service
+    container_name: gogetnote-auth
     environment:
       AUTH_POSTGRES_HOST: ${AUTH_POSTGRES_HOST}
       AUTH_POSTGRES_PORT: ${AUTH_POSTGRES_PORT}
@@ -42,14 +123,16 @@ services:
       AUTH_JWT_ACCESS_TOKEN_TTL: ${AUTH_JWT_ACCESS_TOKEN_TTL}
       AUTH_JWT_REFRESH_TOKEN_TTL: ${AUTH_JWT_REFRESH_TOKEN_TTL}
       AUTH_JWT_BCRYPT_COST: ${AUTH_JWT_BCRYPT_COST}
-    ports:
-      - "${AUTH_GRPC_PORT}:${AUTH_GRPC_PORT}"
     depends_on:
       postgres-auth:
         condition: service_healthy
     networks:
       - gogetnote-network
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "${AUTH_GRPC_PORT}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 networks:
   gogetnote-network:
@@ -57,3 +140,5 @@ networks:
 
 volumes:
   postgres-auth-data:
+  postgres-notes-data:
+  redis-data:

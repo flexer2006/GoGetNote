@@ -155,7 +155,6 @@ func main() {
 		}
 
 		shutdown.Wait(ctx, cfg.Shutdown.GetTimeout(),
-			// Здесь добавьте функции для graceful shutdown ваших компонентов:
 			func(ctx context.Context) error {
 				log.Info(ctx, LogClosingDB)
 				database.Close(ctx)
