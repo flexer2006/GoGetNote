@@ -45,7 +45,7 @@ type Client struct {
 }
 
 // NewAuthClient создает новый экземпляр клиента авторизации.
-func NewAuthClient(cfg *config.GRPCClientConfig) (grpcPort.AuthServiceClient, error) {
+func NewAuthClient(ctx context.Context, cfg *config.GRPCClientConfig) (grpcPort.AuthServiceClient, error) {
 	conn, err := grpc.NewClient(
 		cfg.AuthService.GetAddress(),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -54,9 +54,7 @@ func NewAuthClient(cfg *config.GRPCClientConfig) (grpcPort.AuthServiceClient, er
 		return nil, fmt.Errorf("failed to connect to auth service: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.AuthService.ConnectTimeout)
-	defer cancel()
-
+	// Use the provided context instead of creating a new one
 	conn.Connect()
 
 	for {

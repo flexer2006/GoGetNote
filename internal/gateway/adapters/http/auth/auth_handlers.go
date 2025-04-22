@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gofiber/fiber/v3"
 	"go.uber.org/zap"
@@ -25,6 +26,16 @@ const (
 	ErrorInvalidRequest       = "invalid request"
 	ErrorFailedToServeRequest = "failed to serve request"
 )
+
+// Вспомогательная функция для обработки ошибок HTTP.
+func sendErrorResponse(ctx fiber.Ctx, statusCode int, message string) error {
+	if err := ctx.Status(statusCode).JSON(fiber.Map{
+		"error": message,
+	}); err != nil {
+		return fmt.Errorf("error sending response: %w", err)
+	}
+	return nil
+}
 
 // Handler содержит HTTP обработчики для авторизации.
 type Handler struct {
@@ -47,23 +58,31 @@ func (h *Handler) Register(ctx fiber.Ctx) error {
 	var req dto.RegisterRequest
 	if err := ctx.Bind().JSON(&req); err != nil {
 		log.Error(requestCtx, ErrorInvalidRequest, zap.Error(err))
-		return fmt.Errorf("binding JSON: %w", ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
+		if err := ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": ErrorInvalidRequest,
-		}))
+		}); err != nil {
+			return fmt.Errorf("error sending bad request response: %w", err)
+		}
+		return nil
 	}
 
 	if req.Email == "" || req.Username == "" || req.Password == "" {
-		return fmt.Errorf("validating request: %w", ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
+		if err := ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "email, username and password are required",
-		}))
+		}); err != nil {
+			return fmt.Errorf("error sending validation error response: %w", err)
+		}
+		return nil
 	}
 
 	response, err := h.authService.Register(requestCtx, &req)
 	if err != nil {
 		log.Error(requestCtx, ErrorFailedToServeRequest, zap.Error(err))
-		return fmt.Errorf("registering user: %w", ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		}))
+		statusCode := http.StatusInternalServerError
+		if strings.Contains(err.Error(), "user already exists") {
+			statusCode = http.StatusConflict
+		}
+		return sendErrorResponse(ctx, statusCode, err.Error())
 	}
 
 	if err := ctx.Status(http.StatusCreated).JSON(response); err != nil {
@@ -81,23 +100,17 @@ func (h *Handler) Login(ctx fiber.Ctx) error {
 	var req dto.LoginRequest
 	if err := ctx.Bind().JSON(&req); err != nil {
 		log.Error(requestCtx, ErrorInvalidRequest, zap.Error(err))
-		return fmt.Errorf("binding JSON: %w", ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": ErrorInvalidRequest,
-		}))
+		return sendErrorResponse(ctx, http.StatusBadRequest, ErrorInvalidRequest)
 	}
 
 	if req.Email == "" || req.Password == "" {
-		return fmt.Errorf("validating request: %w", ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": "email and password are required",
-		}))
+		return sendErrorResponse(ctx, http.StatusBadRequest, "email and password are required")
 	}
 
 	response, err := h.authService.Login(requestCtx, &req)
 	if err != nil {
 		log.Error(requestCtx, ErrorFailedToServeRequest, zap.Error(err))
-		return fmt.Errorf("logging in: %w", ctx.Status(http.StatusUnauthorized).JSON(fiber.Map{
-			"error": err.Error(),
-		}))
+		return sendErrorResponse(ctx, http.StatusUnauthorized, err.Error())
 	}
 
 	if err := ctx.Status(http.StatusOK).JSON(response); err != nil {
@@ -115,23 +128,17 @@ func (h *Handler) RefreshTokens(ctx fiber.Ctx) error {
 	var req dto.RefreshRequest
 	if err := ctx.Bind().JSON(&req); err != nil {
 		log.Error(requestCtx, ErrorInvalidRequest, zap.Error(err))
-		return fmt.Errorf("binding JSON: %w", ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": ErrorInvalidRequest,
-		}))
+		return sendErrorResponse(ctx, http.StatusBadRequest, ErrorInvalidRequest)
 	}
 
 	if req.RefreshToken == "" {
-		return fmt.Errorf("validating request: %w", ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": "refresh token is required",
-		}))
+		return sendErrorResponse(ctx, http.StatusBadRequest, "refresh token is required")
 	}
 
 	response, err := h.authService.RefreshTokens(requestCtx, &req)
 	if err != nil {
 		log.Error(requestCtx, ErrorFailedToServeRequest, zap.Error(err))
-		return fmt.Errorf("refreshing tokens: %w", ctx.Status(http.StatusUnauthorized).JSON(fiber.Map{
-			"error": err.Error(),
-		}))
+		return sendErrorResponse(ctx, http.StatusUnauthorized, err.Error())
 	}
 
 	if err := ctx.Status(http.StatusOK).JSON(response); err != nil {
@@ -149,23 +156,17 @@ func (h *Handler) Logout(ctx fiber.Ctx) error {
 	var req dto.LogoutRequest
 	if err := ctx.Bind().JSON(&req); err != nil {
 		log.Error(requestCtx, ErrorInvalidRequest, zap.Error(err))
-		return fmt.Errorf("binding JSON: %w", ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": ErrorInvalidRequest,
-		}))
+		return sendErrorResponse(ctx, http.StatusBadRequest, ErrorInvalidRequest)
 	}
 
 	if req.RefreshToken == "" {
-		return fmt.Errorf("validating request: %w", ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": "refresh token is required",
-		}))
+		return sendErrorResponse(ctx, http.StatusBadRequest, "refresh token is required")
 	}
 
 	err := h.authService.Logout(requestCtx, &req)
 	if err != nil {
 		log.Error(requestCtx, ErrorFailedToServeRequest, zap.Error(err))
-		return fmt.Errorf("logging out: %w", ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		}))
+		return sendErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 	}
 
 	if err := ctx.Status(http.StatusOK).JSON(fiber.Map{
@@ -184,17 +185,13 @@ func (h *Handler) GetProfile(ctx fiber.Ctx) error {
 
 	userCtx, ok := ctx.Locals("userContext").(context.Context)
 	if !ok {
-		return fmt.Errorf("getting user context: %w", ctx.Status(http.StatusUnauthorized).JSON(fiber.Map{
-			"error": "unauthorized",
-		}))
+		return sendErrorResponse(ctx, http.StatusUnauthorized, "unauthorized")
 	}
 
 	profile, err := h.authService.GetUserProfile(userCtx)
 	if err != nil {
 		log.Error(requestCtx, ErrorFailedToServeRequest, zap.Error(err))
-		return fmt.Errorf("getting user profile: %w", ctx.Status(http.StatusUnauthorized).JSON(fiber.Map{
-			"error": err.Error(),
-		}))
+		return sendErrorResponse(ctx, http.StatusUnauthorized, err.Error())
 	}
 
 	if err := ctx.Status(http.StatusOK).JSON(profile); err != nil {

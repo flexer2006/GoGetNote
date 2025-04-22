@@ -8,8 +8,7 @@ services:
       POSTGRES_USER: ${AUTH_POSTGRES_USER}
       POSTGRES_PASSWORD: ${AUTH_POSTGRES_PASSWORD}
       POSTGRES_DB: ${AUTH_POSTGRES_DB}
-    ports:
-      - "${AUTH_POSTGRES_PORT}:5432"
+    # Удален внешний порт для безопасности
     volumes:
       - postgres-auth-data:/var/lib/postgresql/data
     networks:
@@ -29,14 +28,14 @@ services:
       POSTGRES_USER: ${NOTES_POSTGRES_USER}
       POSTGRES_PASSWORD: ${NOTES_POSTGRES_PASSWORD}
       POSTGRES_DB: ${NOTES_POSTGRES_DB}
-    ports:
-      - "${NOTES_POSTGRES_PORT}:5432"
+    command: postgres -p 5433
+    # Удален внешний порт для безопасности
     volumes:
       - postgres-notes-data:/var/lib/postgresql/data
     networks:
       - gogetnote-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${NOTES_POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${NOTES_POSTGRES_USER} -p 5433"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -46,8 +45,7 @@ services:
       context: ../
       dockerfile: build/containers/docker/redis.Dockerfile
     container_name: gogetnote-redis
-    ports:
-      - "${GATEWAY_REDIS_PORT}:6379"
+    # Удален внешний порт для безопасности
     volumes:
       - redis-data:/data
     networks:
@@ -75,7 +73,9 @@ services:
       GATEWAY_GRPC_HOST: ${GATEWAY_GRPC_HOST}
       GATEWAY_GRPC_PORT: ${GATEWAY_GRPC_PORT}
       GATEWAY_GRPC_AUTH_HOST: ${GATEWAY_GRPC_AUTH_HOST}
+      GATEWAY_GRPC_AUTH_PORT: ${GATEWAY_GRPC_AUTH_PORT}
       GATEWAY_GRPC_NOTES_HOST: ${GATEWAY_GRPC_NOTES_HOST}
+      GATEWAY_GRPC_NOTES_PORT: ${GATEWAY_GRPC_NOTES_PORT}
       GATEWAY_REDIS_HOST: ${GATEWAY_REDIS_HOST}
       GATEWAY_REDIS_PORT: ${GATEWAY_REDIS_PORT}
       GATEWAY_REDIS_PASSWORD: ${GATEWAY_REDIS_PASSWORD}
@@ -88,10 +88,13 @@ services:
       GATEWAY_REDIS_IDLE_TIMEOUT: ${GATEWAY_REDIS_IDLE_TIMEOUT}
       GATEWAY_REDIS_MAX_CONN_LIFETIME: ${GATEWAY_REDIS_MAX_CONN_LIFETIME}
       GATEWAY_REDIS_DEFAULT_TTL: ${GATEWAY_REDIS_DEFAULT_TTL}
-    ports:
-      - "${GATEWAY_HTTP_PORT}:${GATEWAY_HTTP_PORT}"
+    # Удален внешний порт, теперь доступ только через nginx
     depends_on:
       redis:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+      notes:
         condition: service_healthy
     networks:
       - gogetnote-network
@@ -119,10 +122,11 @@ services:
       AUTH_LOGGER_MODE: ${AUTH_LOGGER_MODE}
       AUTH_GRPC_HOST: ${AUTH_GRPC_HOST}
       AUTH_GRPC_PORT: ${AUTH_GRPC_PORT}
-      AUTH_JWT_SECRET_KEY: ${AUTH_JWT_SECRET_KEY}
-      AUTH_JWT_ACCESS_TOKEN_TTL: ${AUTH_JWT_ACCESS_TOKEN_TTL}
-      AUTH_JWT_REFRESH_TOKEN_TTL: ${AUTH_JWT_REFRESH_TOKEN_TTL}
-      AUTH_JWT_BCRYPT_COST: ${AUTH_JWT_BCRYPT_COST}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_ACCESS_TOKEN_TTL: ${JWT_ACCESS_TOKEN_TTL}
+      JWT_REFRESH_TOKEN_TTL: ${JWT_REFRESH_TOKEN_TTL}
+      JWT_BCRYPT_COST: ${JWT_BCRYPT_COST}
+    # Удален внешний порт для безопасности
     depends_on:
       postgres-auth:
         condition: service_healthy
@@ -130,6 +134,59 @@ services:
       - gogetnote-network
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "${AUTH_GRPC_PORT}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  notes:
+    build:
+      context: ../
+      dockerfile: build/containers/docker/notes.Dockerfile
+    container_name: gogetnote-notes
+    environment:
+      NOTES_POSTGRES_HOST: ${NOTES_POSTGRES_HOST}
+      NOTES_POSTGRES_PORT: ${NOTES_POSTGRES_PORT}
+      NOTES_POSTGRES_USER: ${NOTES_POSTGRES_USER}
+      NOTES_POSTGRES_PASSWORD: ${NOTES_POSTGRES_PASSWORD}
+      NOTES_POSTGRES_DB: ${NOTES_POSTGRES_DB}
+      NOTES_POSTGRES_MIN_CONN: ${NOTES_POSTGRES_MIN_CONN}
+      NOTES_POSTGRES_MAX_CONN: ${NOTES_POSTGRES_MAX_CONN}
+      NOTES_GRACEFUL_SHUTDOWN_TIMEOUT: ${NOTES_GRACEFUL_SHUTDOWN_TIMEOUT}
+      NOTES_LOGGER_LEVEL: ${NOTES_LOGGER_LEVEL}
+      NOTES_LOGGER_MODE: ${NOTES_LOGGER_MODE}
+      NOTES_GRPC_HOST: ${NOTES_GRPC_HOST}
+      NOTES_GRPC_PORT: ${NOTES_GRPC_PORT}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_ACCESS_TOKEN_TTL: ${JWT_ACCESS_TOKEN_TTL}
+      JWT_REFRESH_TOKEN_TTL: ${JWT_REFRESH_TOKEN_TTL}
+      JWT_BCRYPT_COST: ${JWT_BCRYPT_COST}
+    # Удален внешний порт для безопасности
+    depends_on:
+      postgres-notes:
+        condition: service_healthy
+    networks:
+      - gogetnote-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "${NOTES_GRPC_PORT}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  nginx:
+    build:
+      context: ../
+      dockerfile: build/containers/docker/nginx.Dockerfile
+    container_name: gogetnote-nginx
+    # Единственный внешний порт всего приложения
+    ports:
+      - "80:80"
+    depends_on:
+      gateway:
+        condition: service_healthy
+    networks:
+      - gogetnote-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80"]
       interval: 30s
       timeout: 10s
       retries: 5

@@ -11,7 +11,7 @@ CREATE TABLE notes (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Индекс для поиска заметок по пользователю (теперь столбец user_id существует).
+-- Индекс для поиска заметок по пользователю
 CREATE INDEX idx_notes_user_id ON notes(user_id);
 
 -- Функция для обновления updated_at.

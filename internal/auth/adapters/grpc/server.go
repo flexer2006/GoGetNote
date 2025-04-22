@@ -66,10 +66,9 @@ func (s *Server) Start(ctx context.Context) error {
 // Stop останавливает gRPC сервер.
 func (s *Server) Stop(ctx context.Context) {
 	log := logger.Log(ctx)
+	log.Info(ctx, "stopping gRPC server")
 
-	log.Info(ctx, LogServerStopping)
 	s.server.GracefulStop()
-	log.Info(ctx, LogServerStopped)
 }
 
 // RegisterService регистрирует gRPC сервис в сервере.

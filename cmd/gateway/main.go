@@ -1,3 +1,5 @@
+// Package main implements the API gateway service for the GoGetNote application,
+// which routes requests to the appropriate microservices and handles authentication.
 package main
 
 import (
@@ -12,7 +14,8 @@ import (
 
 	"gogetnote/internal/gateway/adapters/cache"
 	"gogetnote/internal/gateway/adapters/grpc/auth"
-	httpServer "gogetnote/internal/gateway/app/http"
+	"gogetnote/internal/gateway/adapters/grpc/notes"
+	httpServer "gogetnote/internal/gateway/adapters/http"
 	"gogetnote/internal/gateway/app/services"
 	"gogetnote/internal/gateway/config"
 	"gogetnote/pkg/logger"
@@ -32,6 +35,7 @@ const (
 	ErrLoadConfig           = "failed to load configuration"
 	ErrInitLoggerWithConfig = "failed to initialize logger with configuration settings"
 	ErrCreateAuthClient     = "failed to create auth client"
+	ErrCreateNotesClient    = "failed to create notes client" // Добавлена новая ошибка
 	ErrCreateRedisClient    = "failed to create Redis client"
 	ErrStartHTTPServer      = "failed to start HTTP server"
 )
@@ -106,16 +110,23 @@ func main() {
 			zap.String("startup_time", time.Now().Format(time.RFC3339)))
 
 		log.Info(ctx, LogInitClients)
-		authClient, err := auth.NewAuthClient(&cfg.GRPC)
+		authClient, err := auth.NewAuthClient(ctx, &cfg.GRPC)
 		if err != nil {
 			log.Error(ctx, ErrCreateAuthClient, zap.Error(err))
 			exitCode = 1
 			return
 		}
 
+		notesClient, err := notes.NewNotesClient(ctx, &cfg.GRPC)
+		if err != nil {
+			log.Error(ctx, ErrCreateNotesClient, zap.Error(err))
+			exitCode = 1
+			return
+		}
+
 		// Инициализация Redis
 		log.Info(ctx, LogInitCache)
-		redisCache, err := cache.NewRedisCache(&cfg.Redis)
+		redisCache, err := cache.NewRedisCache(ctx, &cfg.Redis)
 		if err != nil {
 			log.Error(ctx, ErrCreateRedisClient, zap.Error(err))
 			exitCode = 1
@@ -124,6 +135,7 @@ func main() {
 
 		log.Info(ctx, LogInitServices)
 		authService := services.NewAuthService(authClient, redisCache)
+		notesService := services.NewNotesService(notesClient, redisCache)
 
 		log.Info(ctx, LogInitHTTPServer)
 		app := fiber.New(fiber.Config{
@@ -131,7 +143,7 @@ func main() {
 			WriteTimeout: cfg.HTTP.WriteTimeout,
 		})
 
-		httpServer.SetupRouter(app, authService)
+		httpServer.SetupRouter(app, authService, notesService)
 
 		log.Info(ctx, LogStartingHTTP, zap.String("address", cfg.HTTP.GetAddress()))
 		go func() {
@@ -145,7 +157,18 @@ func main() {
 			func(ctx context.Context) error {
 				if client, ok := authClient.(*auth.Client); ok {
 					log.Info(ctx, "Closing auth client")
-					return client.Close()
+					if err := client.Close(); err != nil {
+						log.Warn(ctx, "Error closing auth client", zap.Error(err))
+					}
+				}
+				return nil
+			},
+			func(ctx context.Context) error {
+				if client, ok := notesClient.(*notes.Client); ok {
+					log.Info(ctx, "Closing notes client")
+					if err := client.Close(); err != nil {
+						log.Warn(ctx, "Error closing notes client", zap.Error(err))
+					}
 				}
 				return nil
 			},

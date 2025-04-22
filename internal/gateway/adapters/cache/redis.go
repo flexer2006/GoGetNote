@@ -35,7 +35,7 @@ type RedisCache struct {
 }
 
 // NewRedisCache создает новый экземпляр RedisCache.
-func NewRedisCache(cfg *config.RedisConfig) (cache.Cache, error) {
+func NewRedisCache(ctx context.Context, cfg *config.RedisConfig) (cache.Cache, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:            cfg.GetAddressString(),
 		Password:        cfg.Password,
@@ -49,9 +49,7 @@ func NewRedisCache(cfg *config.RedisConfig) (cache.Cache, error) {
 		ConnMaxLifetime: cfg.MaxConnLifetime,
 	})
 
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.ConnectTimeout)
-	defer cancel()
-
+	// Use the provided context instead of creating a new one
 	if err := client.Ping(ctx).Err(); err != nil {
 		return nil, fmt.Errorf("failed to connect to redis: %w", err)
 	}

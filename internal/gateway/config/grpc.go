@@ -12,7 +12,7 @@ type GRPCClientConfig struct {
 	RequestTimeout time.Duration     `yaml:"request_timeout" env:"GATEWAY_GRPC_REQUEST_TIMEOUT" env-default:"5s"`
 }
 
-// GRPCServiceConfig представляет конфигурацию для подключения к gRPC сервису.
+// GRPCServiceConfig представляет конфигурацию для подключения к gRPC сервису авторизации.
 type GRPCServiceConfig struct {
 	Host           string        `yaml:"host" env:"HOST" env-default:"0.0.0.0"`
 	Port           int           `yaml:"port" env:"PORT" env-default:"50052"`
