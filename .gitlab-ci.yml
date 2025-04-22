@@ -1,0 +1,104 @@
+image: golang:1.24.2
+
+stages:
+  - lint
+  - test
+  - build
+  - deploy
+
+variables:
+  # Use Go modules
+  GO111MODULE: "on"
+  # Store downloaded modules in .cache/go-build
+  GOPATH: $CI_PROJECT_DIR/.cache/go-build
+  # Set minimum test coverage threshold
+  TEST_COVERAGE_THRESHOLD: 30
+
+# Define cache to improve performance
+cache:
+  paths:
+    - .cache/go-build
+
+before_script:
+  - mkdir -p .cache/go-build
+  - go mod download
+
+lint:
+  stage: lint
+  script:
+    - go install golang.org/x/lint/golint@latest
+    - go install honnef.co/go/tools/cmd/staticcheck@latest
+    - golint -set_exit_status ./...
+    - staticcheck ./...
+    - go vet ./...
+  only:
+    - merge_requests
+    - main
+    - develop
+
+test:
+  stage: test
+  script:
+    # Run tests with verbose output and race detection
+    - go test -v -race ./...
+    # Run tests with coverage and output to coverage.txt
+    - go test -coverprofile=coverage.txt -covermode=atomic ./...
+    # Print coverage report
+    - go tool cover -func=coverage.txt
+    # Check if coverage is above threshold
+    - |
+      COVERAGE=$(go tool cover -func=coverage.txt | grep total | awk '{print substr($3, 1, length($3)-1)}')
+      echo "Total coverage: $COVERAGE%"
+      if (( $(echo "$COVERAGE < $TEST_COVERAGE_THRESHOLD" | bc -l) )); then
+        echo "Test coverage is below threshold of $TEST_COVERAGE_THRESHOLD%"
+        exit 1
+      fi
+  artifacts:
+    paths:
+      - coverage.txt
+    expire_in: 1 week
+  only:
+    - merge_requests
+    - main
+    - develop
+
+build:
+  stage: build
+  script:
+    # Build for multiple platforms
+    - GOOS=linux GOARCH=amd64 go build -o bin/gogetnote-linux-amd64 ./cmd/...
+    - GOOS=darwin GOARCH=amd64 go build -o bin/gogetnote-darwin-amd64 ./cmd/...
+    # Optional: Build Docker images if needed
+    #- docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG .
+    #- docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  artifacts:
+    paths:
+      - bin/
+    expire_in: 1 week
+  only:
+    - main
+    - develop
+    - tags
+
+# Deploy to staging environment
+deploy-staging:
+  stage: deploy
+  script:
+    - echo "Deploying to staging environment..."
+  environment:
+    name: staging
+  only:
+    - develop
+  when: manual
+
+# Deploy to production environment
+deploy-production:
+  stage: deploy
+  script:
+    - echo "Deploying to production environment..."
+  environment:
+    name: production
+  only:
+    - main
+    - tags
+  when: manual
