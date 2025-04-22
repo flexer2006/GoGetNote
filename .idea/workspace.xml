@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="d37a59c6-b211-4866-b201-09ec190778f7" name="Changes" comment="refactor" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Dockerfile" />
+        <option value="Go File" />
+      </list>
+    </option>
+  </component>
+  <component name="GOROOT" url="file://$USER_HOME$/go" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitLabMergeRequestFiltersHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPENED&quot;,
+    &quot;assignee&quot;: {
+      &quot;type&quot;: &quot;org.jetbrains.plugins.gitlab.mergerequest.ui.filters.GitLabMergeRequestsFiltersValue.MergeRequestsMemberFilterValue.MergeRequestsAssigneeFilterValue&quot;,
+      &quot;username&quot;: &quot;flexer2006&quot;,
+      &quot;fullname&quot;: &quot;Андрей Пыльнев&quot;
+    }
+  }
+}</component>
+  <component name="GitLabMergeRequestsSettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;first&quot;: &quot;git@gitlab.crja72.ru:golang/2025/spring/course/projects/go9/gogetnote.git&quot;,
+    &quot;second&quot;: &quot;465d6d59-9358-43de-b83e-7d8c64157997&quot;
+  }
+}</component>
+  <component name="GoLibraries">
+    <option name="indexEntireGoPath" value="true" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/pkg/shutdown/tests/graceful/wait_test.go" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 0
+}</component>
+  <component name="ProjectId" id="2vtiRMUGgnyQFtmSR4C5N3oP1IO" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_MARK_IGNORED_FILES_AS_EXCLUDED&quot;: &quot;true&quot;,
+    &quot;DefaultGoTemplateProperty&quot;: &quot;Go File&quot;,
+    &quot;Docker.deploy: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Go Build.go build gogetnote/cmd/auth.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.TestDatabaseClose in gogetnote/pkg/db/postgres/tests/postgres.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.TestGenerateAccessToken in gogetnote/internal/auth/adapters/services/tests/jwt_service.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.TestGenerateAccessToken/token_generation_with_empty_username in gogetnote/internal/auth/adapters/services/tests/jwt_service.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.TestNew in gogetnote/internal/auth/db/tests/db.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.TestPool in gogetnote/internal/auth/db/tests/db.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.TestWaitExecutesHooks in gogetnote/pkg/shutdown/tests/graceful.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.go test gogetnote/internal/auth/adapters/grpc/tests/auth_handler.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.go test gogetnote/internal/auth/adapters/grpc/tests/server.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.go test gogetnote/internal/auth/adapters/postgres/tests/repo_factory.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.go test gogetnote/internal/auth/adapters/postgres/tests/token_repo.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.go test gogetnote/internal/auth/adapters/postgres/tests/user_repo.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.go test gogetnote/internal/auth/adapters/services/bcrypt/tests/bcrypt_service.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.go test gogetnote/internal/auth/adapters/services/jwt/tests/jwt.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.go test gogetnote/internal/auth/adapters/services/jwt/tests/jwt_service.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.go test gogetnote/internal/auth/adapters/services/tests/jwt_service.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.go test gogetnote/internal/auth/adapters/services/tests/service_factory.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.go test gogetnote/internal/auth/app/tests/auth_usecase.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.go test gogetnote/internal/auth/app/tests/user_usecase.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.go test gogetnote/internal/auth/config/tests/config.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.go test gogetnote/internal/auth/db/tests/db.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.go test gogetnote/pkg/db/postgres/tests/migrate.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.go test gogetnote/pkg/db/postgres/tests/postgres.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.go test gogetnote/pkg/logger/tests/context.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.go test gogetnote/pkg/logger/tests/logger.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.go test gogetnote/pkg/logger/tests/request_id.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.go test gogetnote/pkg/shutdown/tests/graceful.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.GoLinterPluginOnboarding&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.GoLinterPluginStorageMigration&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.modules.go.list.on.any.changes.was.set&quot;: &quot;true&quot;,
+    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
+    &quot;go.sdk.automatically.set&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/andrewgo/developing/go-workspace/src/gogetnote&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;postgresql&quot;
+    ]
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/internal/auth/adapters/services/tests" />
+      <recent name="$PROJECT_DIR$/internal/auth/adapters/services/" />
+      <recent name="$PROJECT_DIR$/internal/auth/adapters/services/tests/" />
+      <recent name="$PROJECT_DIR$/internal/auth/adapters/services" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Go Build.go build gogetnote/cmd/auth">
+    <configuration name="go build gogetnote/cmd/auth" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+      <module name="gogetnote" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="gogetnote/cmd/auth" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/cmd/auth/main.go" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go test gogetnote/internal/auth/adapters/grpc/tests/auth_handler" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="gogetnote" />
+      <working_directory value="$PROJECT_DIR$/internal/auth/adapters/grpc/tests/auth_handler" />
+      <kind value="PACKAGE" />
+      <package value="gogetnote/internal/auth/adapters/grpc/tests/auth_handler" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go test gogetnote/internal/auth/adapters/grpc/tests/server" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="gogetnote" />
+      <working_directory value="$PROJECT_DIR$/internal/auth/adapters/grpc/tests/server" />
+      <kind value="PACKAGE" />
+      <package value="gogetnote/internal/auth/adapters/grpc/tests/server" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go test gogetnote/internal/auth/adapters/services/tests/jwt_service" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="gogetnote" />
+      <working_directory value="$PROJECT_DIR$/internal/auth/adapters/services/tests/jwt_service" />
+      <kind value="PACKAGE" />
+      <package value="gogetnote/internal/auth/adapters/services/tests/jwt_service" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="docker-deploy" factoryName="docker-compose.yml" temporary="true">
+      <deployment type="docker-compose.yml">
+        <settings />
+      </deployment>
+      <method v="2" />
+    </configuration>
+    <configuration name="deploy: Compose Deployment" type="docker-deploy" factoryName="docker-compose.yml" temporary="true" server-name="Docker">
+      <deployment type="docker-compose.yml">
+        <settings>
+          <option name="sourceFilePath" value="deploy/docker-compose.yml" />
+        </settings>
+      </deployment>
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Docker.deploy: Compose Deployment" />
+        <item itemvalue="Go Build.go build gogetnote/cmd/auth" />
+        <item itemvalue="Go Test.go test gogetnote/internal/auth/adapters/grpc/tests/auth_handler" />
+        <item itemvalue="Go Test.go test gogetnote/internal/auth/adapters/grpc/tests/server" />
+        <item itemvalue="Go Test.go test gogetnote/internal/auth/adapters/services/tests/jwt_service" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-gosdk-3b128438d3f6-34ac7aa8f6ab-org.jetbrains.plugins.go.sharedIndexes.bundled-GO-251.23774.430" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="d37a59c6-b211-4866-b201-09ec190778f7" name="Changes" comment="" />
+      <created>1744970762234</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1744970762234</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="origin/andrew" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="refactor" />
+    <option name="LAST_COMMIT_MESSAGE" value="refactor" />
+  </component>
+  <component name="VgoProject">
+    <integration-enabled>false</integration-enabled>
+    <settings-migrated>true</settings-migrated>
+  </component>
+</project>
