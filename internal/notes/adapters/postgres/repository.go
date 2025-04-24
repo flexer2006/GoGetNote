@@ -8,7 +8,7 @@ import (
 
 // RepositoryFactory создает репозитории для работы с базой данных.
 type RepositoryFactory struct {
-	pool *pgxpool.Pool
+	pool DBPool
 }
 
 // NewRepositoryFactory создает новую фабрику репозиториев.

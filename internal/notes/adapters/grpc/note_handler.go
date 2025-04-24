@@ -15,6 +15,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"gogetnote/internal/notes/app"
+	"gogetnote/internal/notes/domain/entities"
 	notesv1 "gogetnote/pkg/api/notes/v1"
 	"gogetnote/pkg/logger"
 )
@@ -31,20 +32,28 @@ func wrapGrpcError(code codes.Code, message string) error {
 	return fmt.Errorf("gRPC error: %w", status.Error(code, message))
 }
 
+type NoteUseCase interface {
+	CreateNote(ctx context.Context, token, title, content string) (string, error)
+	GetNote(ctx context.Context, token, noteID string) (*entities.Note, error)
+	ListNotes(ctx context.Context, token string, limit, offset int) ([]*entities.Note, int, error)
+	UpdateNote(ctx context.Context, token, noteID, title, content string) (*entities.Note, error)
+	DeleteNote(ctx context.Context, token, noteID string) error
+}
+
 // NoteHandler обрабатывает gRPC запросы к сервису заметок.
 type NoteHandler struct {
-	noteUseCase *app.NoteUseCase
+	noteUseCase NoteUseCase
 	notesv1.UnimplementedNoteServiceServer
 }
 
 // NewNoteHandler создает новый обработчик gRPC запросов к сервису заметок.
-func NewNoteHandler(noteUseCase *app.NoteUseCase) *NoteHandler {
+func NewNoteHandler(noteUseCase NoteUseCase) *NoteHandler {
 	return &NoteHandler{
 		noteUseCase: noteUseCase,
 	}
 }
 
-func extractToken(ctx context.Context) (string, error) {
+func ExtractToken(ctx context.Context) (string, error) {
 	mtd, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return "", ErrMetadataNotFound
@@ -75,7 +84,7 @@ func (h *NoteHandler) CreateNote(ctx context.Context, req *notesv1.CreateNoteReq
 	log := logger.Log(ctx).With(zap.String("handler", "NoteHandler.CreateNote"))
 	log.Debug(ctx, "create note request received")
 
-	token, err := extractToken(ctx)
+	token, err := ExtractToken(ctx)
 	if err != nil {
 		log.Error(ctx, "failed to extract token", zap.Error(err))
 		return nil, wrapGrpcError(codes.Unauthenticated, "authentication required")
@@ -116,7 +125,7 @@ func (h *NoteHandler) GetNote(ctx context.Context, req *notesv1.GetNoteRequest) 
 	log := logger.Log(ctx).With(zap.String("handler", "NoteHandler.GetNote"))
 	log.Debug(ctx, "get note request received", zap.String("noteID", req.GetNoteId()))
 
-	token, err := extractToken(ctx)
+	token, err := ExtractToken(ctx)
 	if err != nil {
 		log.Error(ctx, "failed to extract token", zap.Error(err))
 		return nil, wrapGrpcError(codes.Unauthenticated, "authentication required")
@@ -155,7 +164,7 @@ func (h *NoteHandler) ListNotes(ctx context.Context, req *notesv1.ListNotesReque
 		zap.Int32("limit", req.GetLimit()),
 		zap.Int32("offset", req.GetOffset()))
 
-	token, err := extractToken(ctx)
+	token, err := ExtractToken(ctx)
 	if err != nil {
 		log.Error(ctx, "failed to extract token", zap.Error(err))
 		return nil, wrapGrpcError(codes.Unauthenticated, "authentication required")
@@ -208,7 +217,7 @@ func (h *NoteHandler) UpdateNote(ctx context.Context, req *notesv1.UpdateNoteReq
 	log := logger.Log(ctx).With(zap.String("handler", "NoteHandler.UpdateNote"))
 	log.Debug(ctx, "update note request received", zap.String("noteID", req.GetNoteId()))
 
-	token, err := extractToken(ctx)
+	token, err := ExtractToken(ctx)
 	if err != nil {
 		log.Error(ctx, "failed to extract token", zap.Error(err))
 		return nil, wrapGrpcError(codes.Unauthenticated, "authentication required")
@@ -253,7 +262,7 @@ func (h *NoteHandler) DeleteNote(ctx context.Context, req *notesv1.DeleteNoteReq
 	log := logger.Log(ctx).With(zap.String("handler", "NoteHandler.DeleteNote"))
 	log.Debug(ctx, "delete note request received", zap.String("noteID", req.GetNoteId()))
 
-	token, err := extractToken(ctx)
+	token, err := ExtractToken(ctx)
 	if err != nil {
 		log.Error(ctx, "failed to extract token", zap.Error(err))
 		return nil, wrapGrpcError(codes.Unauthenticated, "authentication required")

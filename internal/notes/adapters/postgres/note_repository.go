@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/pgconn"
 	"go.uber.org/zap"
 
 	"gogetnote/internal/notes/domain/entities"
@@ -15,16 +15,23 @@ import (
 	"gogetnote/pkg/logger"
 )
 
+// DBPool defines the interface for database operations needed by the repository.
+type DBPool interface {
+	QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row
+	Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error)
+	Exec(ctx context.Context, sql string, args ...interface{}) (pgconn.CommandTag, error)
+}
+
 // NoteRepository реализует интерфейс repositories.NoteRepository.
 type NoteRepository struct {
-	pool *pgxpool.Pool
+	pool DBPool
 }
 
 // ErrNoteNotFoundOrNotOwned is returned when a note doesn't exist or belongs to another user.
 var ErrNoteNotFoundOrNotOwned = errors.New("note not found or not owned by user")
 
 // NewNoteRepository создает новый репозиторий заметок.
-func NewNoteRepository(pool *pgxpool.Pool) repositories.NoteRepository {
+func NewNoteRepository(pool DBPool) repositories.NoteRepository {
 	return &NoteRepository{pool: pool}
 }
 

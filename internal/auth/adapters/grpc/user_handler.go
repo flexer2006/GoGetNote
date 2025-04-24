@@ -3,6 +3,7 @@ package grpc
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -70,13 +71,10 @@ func (h *UserHandler) GetUserProfile(ctx context.Context, _ *emptypb.Empty) (*au
 	user, err := h.userUseCase.GetUserProfile(ctx, userID)
 	if err != nil {
 		log.Error(ctx, fmt.Sprintf("%s: %v", ErrGetUserProfileMsg, err))
-
-		switch err.Error() {
-		case ErrUserNotFoundMsg:
+		if errors.Is(err, ErrUserNotFound) {
 			return nil, fmt.Errorf("%s: %w", ErrProfileRetrievalFailedMsg, ErrUserNotFound)
-		default:
-			return nil, fmt.Errorf("%s: %w", ErrProfileRetrievalFailedMsg, ErrInternalService)
 		}
+		return nil, fmt.Errorf("%s: %w", ErrProfileRetrievalFailedMsg, ErrInternalService)
 	}
 
 	return &authv1.UserProfileResponse{

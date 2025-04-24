@@ -3,7 +3,6 @@ package repositories
 
 import (
 	"context"
-
 	"gogetnote/internal/notes/domain/entities"
 )
 
