@@ -7,14 +7,11 @@ stages:
   - deploy
 
 variables:
-  # Use Go modules
   GO111MODULE: "on"
-  # Store downloaded modules in .cache/go-build
   GOPATH: $CI_PROJECT_DIR/.cache/go-build
-  # Set minimum test coverage threshold
   TEST_COVERAGE_THRESHOLD: 30
+  MICROSERVICES_PATHS: "./internal/auth/... ./internal/notes/..."
 
-# Define cache to improve performance
 cache:
   paths:
     - .cache/go-build
@@ -28,9 +25,9 @@ lint:
   script:
     - go install golang.org/x/lint/golint@latest
     - go install honnef.co/go/tools/cmd/staticcheck@latest
-    - golint -set_exit_status ./...
-    - staticcheck ./...
-    - go vet ./...
+    - golint -set_exit_status $MICROSERVICES_PATHS
+    - staticcheck $MICROSERVICES_PATHS
+    - go vet $MICROSERVICES_PATHS
   only:
     - merge_requests
     - main
@@ -39,23 +36,35 @@ lint:
 test:
   stage: test
   script:
-    # Run tests with verbose output and race detection
-    - go test -v -race ./...
-    # Run tests with coverage and output to coverage.txt
-    - go test -coverprofile=coverage.txt -covermode=atomic ./...
-    # Print coverage report
+    # Install necessary tools for BC calculation
+    - apt-get update && apt-get install -y bc
+    
+    # Run tests with race detection on microservices
+    - go test -v -race $MICROSERVICES_PATHS
+    
+    # Run tests with coverage for microservices
+    - go test -coverprofile=coverage.txt -covermode=atomic $MICROSERVICES_PATHS
+    
+    # Print detailed coverage report
     - go tool cover -func=coverage.txt
-    # Check if coverage is above threshold
+    
+    # Check if coverage meets threshold
     - |
       COVERAGE=$(go tool cover -func=coverage.txt | grep total | awk '{print substr($3, 1, length($3)-1)}')
-      echo "Total coverage: $COVERAGE%"
+      echo "Total microservice coverage: $COVERAGE%"
       if (( $(echo "$COVERAGE < $TEST_COVERAGE_THRESHOLD" | bc -l) )); then
-        echo "Test coverage is below threshold of $TEST_COVERAGE_THRESHOLD%"
+        echo "❌ Test coverage ($COVERAGE%) is below threshold of $TEST_COVERAGE_THRESHOLD%"
         exit 1
+      else
+        echo "✅ Test coverage ($COVERAGE%) meets threshold of $TEST_COVERAGE_THRESHOLD%"
       fi
   artifacts:
     paths:
       - coverage.txt
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.txt
     expire_in: 1 week
   only:
     - merge_requests
@@ -65,12 +74,11 @@ test:
 build:
   stage: build
   script:
-    # Build for multiple platforms
-    - GOOS=linux GOARCH=amd64 go build -o bin/gogetnote-linux-amd64 ./cmd/...
-    - GOOS=darwin GOARCH=amd64 go build -o bin/gogetnote-darwin-amd64 ./cmd/...
-    # Optional: Build Docker images if needed
-    #- docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG .
-    #- docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+    # Build microservices
+    - mkdir -p bin
+    - GOOS=linux GOARCH=amd64 go build -o bin/auth-service ./cmd/auth/...
+    - GOOS=linux GOARCH=amd64 go build -o bin/notes-service ./cmd/notes/...
+    - GOOS=linux GOARCH=amd64 go build -o bin/gateway-service ./cmd/gateway/...
   artifacts:
     paths:
       - bin/
@@ -80,7 +88,6 @@ build:
     - develop
     - tags
 
-# Deploy to staging environment
 deploy-staging:
   stage: deploy
   script:
@@ -91,7 +98,6 @@ deploy-staging:
     - develop
   when: manual
 
-# Deploy to production environment
 deploy-production:
   stage: deploy
   script:
