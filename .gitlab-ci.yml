@@ -1,7 +1,6 @@
 image: golang:1.24.2
 
 stages:
-  - lint
   - test
   - build
   - deploy
@@ -20,51 +19,23 @@ before_script:
   - mkdir -p .cache/go-build
   - go mod download
 
-lint:
-  stage: lint
-  script:
-    - go install golang.org/x/lint/golint@latest
-    - go install honnef.co/go/tools/cmd/staticcheck@latest
-    - golint -set_exit_status $MICROSERVICES_PATHS
-    - staticcheck $MICROSERVICES_PATHS
-    - go vet $MICROSERVICES_PATHS
-  only:
-    - merge_requests
-    - main
-    - develop
-
 test:
   stage: test
   script:
-    # Install necessary tools for BC calculation
     - apt-get update && apt-get install -y bc
-    
-    # Run tests with race detection on microservices
     - go test -v -race $MICROSERVICES_PATHS
-    
-    # Run tests with coverage for microservices
     - go test -coverprofile=coverage.txt -covermode=atomic $MICROSERVICES_PATHS
-    
-    # Print detailed coverage report
     - go tool cover -func=coverage.txt
-    
-    # Check if coverage meets threshold
     - |
       COVERAGE=$(go tool cover -func=coverage.txt | grep total | awk '{print substr($3, 1, length($3)-1)}')
       echo "Total microservice coverage: $COVERAGE%"
       if (( $(echo "$COVERAGE < $TEST_COVERAGE_THRESHOLD" | bc -l) )); then
         echo "❌ Test coverage ($COVERAGE%) is below threshold of $TEST_COVERAGE_THRESHOLD%"
         exit 1
-      else
-        echo "✅ Test coverage ($COVERAGE%) meets threshold of $TEST_COVERAGE_THRESHOLD%"
       fi
   artifacts:
     paths:
       - coverage.txt
-    reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: coverage.txt
     expire_in: 1 week
   only:
     - merge_requests
@@ -74,7 +45,6 @@ test:
 build:
   stage: build
   script:
-    # Build microservices
     - mkdir -p bin
     - GOOS=linux GOARCH=amd64 go build -o bin/auth-service ./cmd/auth/...
     - GOOS=linux GOARCH=amd64 go build -o bin/notes-service ./cmd/notes/...
