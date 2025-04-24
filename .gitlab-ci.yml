@@ -18,8 +18,28 @@ test:
   script:
     - apt-get update && apt-get install -y bc
     - |
-      TARGETS="./internal/auth/adapters/... ./internal/auth/app ./internal/auth/config ./internal/auth/db ./internal/notes/adapters/... ./internal/notes/app ./internal/notes/config ./internal/notes/db"
-      go test -coverprofile=coverage.txt -covermode=atomic $TARGETS
+      PKGS=(
+        ./internal/auth/adapters/grpc
+        ./internal/auth/adapters/postgres
+        ./internal/auth/adapters/services
+        ./internal/auth/app
+        ./internal/auth/config
+        ./internal/auth/db
+        ./internal/notes/adapters/grpc
+        ./internal/notes/adapters/postgres
+        ./internal/notes/adapters/services
+        ./internal/notes/app
+        ./internal/notes/config
+        ./internal/notes/db
+      )
+      > coverage.txt
+      for pkg in "${PKGS[@]}"; do
+        go test -coverprofile=profile.out -covermode=atomic "$pkg"
+        if [ -f profile.out ]; then
+          tail -n +2 profile.out >> coverage.txt
+        fi
+      done
+      echo "mode: atomic" | cat - coverage.txt > coverage_all.txt && mv coverage_all.txt coverage.txt
       COVERAGE=$(go tool cover -func=coverage.txt | grep total | awk '{print substr($3, 1, length($3)-1)}')
       echo "Total selected microservice coverage: $COVERAGE%"
       if (( $(echo "$COVERAGE < $TEST_COVERAGE_THRESHOLD" | bc -l) )); then
