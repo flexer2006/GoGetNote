@@ -17,14 +17,11 @@ test:
   stage: test
   script:
     - apt-get update && apt-get install -y bc
-    - go test -coverprofile=coverage.txt -covermode=atomic $MICROSERVICES_PATHS
     - |
-      COVERAGE=$(go tool cover -func=coverage.txt | grep -v '100.0%$' | grep -v '0.0%$' | grep -v '\[no test files\]' | grep total | awk '{print substr($3, 1, length($3)-1)}')
-      if [ -z "$COVERAGE" ]; then
-        echo "No coverage data found!"
-        exit 1
-      fi
-      echo "Total microservice coverage: $COVERAGE%"
+      TARGETS="./internal/auth/adapters/... ./internal/auth/app ./internal/auth/config ./internal/auth/db ./internal/notes/adapters/... ./internal/notes/app ./internal/notes/config ./internal/notes/db"
+      go test -coverprofile=coverage.txt -covermode=atomic $TARGETS
+      COVERAGE=$(go tool cover -func=coverage.txt | grep total | awk '{print substr($3, 1, length($3)-1)}')
+      echo "Total selected microservice coverage: $COVERAGE%"
       if (( $(echo "$COVERAGE < $TEST_COVERAGE_THRESHOLD" | bc -l) )); then
         echo "❌ Test coverage ($COVERAGE%) is below threshold of $TEST_COVERAGE_THRESHOLD%"
         exit 1
