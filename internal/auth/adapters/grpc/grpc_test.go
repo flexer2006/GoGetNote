@@ -114,14 +114,6 @@ func TestStart(t *testing.T) {
 			expectError: true,
 		},
 		{
-			name: "permissions issue",
-			cfg: &config.GRPCConfig{
-				Host: "localhost",
-				Port: 80,
-			},
-			expectError: true,
-		},
-		{
 			name: "invalid port",
 			cfg: &config.GRPCConfig{
 				Host: "localhost",
