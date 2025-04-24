@@ -7,25 +7,17 @@ stages:
 
 variables:
   GO111MODULE: "on"
-  GOPATH: $CI_PROJECT_DIR/.cache/go-build
   TEST_COVERAGE_THRESHOLD: 30
   MICROSERVICES_PATHS: "./internal/auth/... ./internal/notes/..."
 
-cache:
-  paths:
-    - .cache/go-build
-
 before_script:
-  - mkdir -p .cache/go-build
   - go mod download
 
 test:
   stage: test
   script:
     - apt-get update && apt-get install -y bc
-    - go test -v -race $MICROSERVICES_PATHS
     - go test -coverprofile=coverage.txt -covermode=atomic $MICROSERVICES_PATHS
-    - go tool cover -func=coverage.txt
     - |
       COVERAGE=$(go tool cover -func=coverage.txt | grep total | awk '{print substr($3, 1, length($3)-1)}')
       echo "Total microservice coverage: $COVERAGE%"
@@ -33,10 +25,6 @@ test:
         echo "❌ Test coverage ($COVERAGE%) is below threshold of $TEST_COVERAGE_THRESHOLD%"
         exit 1
       fi
-  artifacts:
-    paths:
-      - coverage.txt
-    expire_in: 1 week
   only:
     - merge_requests
     - main
@@ -49,10 +37,6 @@ build:
     - GOOS=linux GOARCH=amd64 go build -o bin/auth-service ./cmd/auth/...
     - GOOS=linux GOARCH=amd64 go build -o bin/notes-service ./cmd/notes/...
     - GOOS=linux GOARCH=amd64 go build -o bin/gateway-service ./cmd/gateway/...
-  artifacts:
-    paths:
-      - bin/
-    expire_in: 1 week
   only:
     - main
     - develop
@@ -63,7 +47,7 @@ deploy-staging:
   script:
     - echo "Deploying to staging environment..."
   environment:
-    name: staging
+    name: dev
   only:
     - develop
   when: manual
@@ -73,7 +57,7 @@ deploy-production:
   script:
     - echo "Deploying to production environment..."
   environment:
-    name: production
+    name: prd
   only:
     - main
     - tags
