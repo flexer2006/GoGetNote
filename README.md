@@ -111,12 +111,8 @@ docker-compose up -d
 
 ### Запуск для разработки
 
-1. Установить необходимые инструменты Go:
-```bash
-task proto:tools
-```
 
-2. Сгенерировать код Protocol Buffer:
+1. Сгенерировать код Protocol Buffer:
 ```bash
 # Для Linux/Unix
 task proto:gen:linux
@@ -124,7 +120,7 @@ task proto:gen:linux
 task proto:gen:windows
 ```
 
-3. Для запуска отдельных сервисов перейдите в соответствующие директории:
+2. Для запуска отдельных сервисов перейдите в соответствующие директории:
 ```bash
 cd cmd/auth
 go run main.go

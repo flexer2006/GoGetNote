@@ -31,6 +31,9 @@ test:
         ./internal/notes/app
         ./internal/notes/config
         ./internal/notes/db
+        ./pkg/db/postgres
+        ./pkg/logger
+        ./pkg/shutdown
       )
       > coverage.txt
       for pkg in "${PKGS[@]}"; do
